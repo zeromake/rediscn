@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>zabbix监控redis多实例 - Zabbix - 运维网 - 手机版 - Powered by Discuz！ -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p>简述</p>
+
+<p>zabbix监控redis实例有个不好的地方是只能监控固定的6379端口，如果是非6379端口的话，需要修改模板，如果主机有多个redis实例的话，需要具有不同的redis模板，然后在管理监控，很是麻烦，为了解决这个问题，我使用lld（low level discovery）方式监控redis，只需要你在正则表达式里把需要监控的端口标上，就可以监控redis多实例。</p>
+
+<p>1、agent端操作</p>
+
+<p># cat redis_low_discovery.sh<br />
+#!/bin/bash<br />
+#Script_name redis_low_discovery.sh<br />
+redis() {<br />
+            port=($(sudo netstat -tpln | awk -F “[ :]+” ‘/redis/ &amp;&amp; /0.0.0.0/ {print $5}’))<br />
+            printf ‘{\n’<br />
+            printf ‘\t”data”:[\n’<br />
+               for key in ${!port[@]}<br />
+                   do<br />
+                       if [[ “${#port[@]}” -gt 1 &amp;&amp; “${key}” -ne “$((${#port[@]}-1))” ]];then<br />
+              socket=`ps aux|grep ${port[${key}]}|grep -v grep|awk -F ‘=’ ‘{print $10}’|cut -d ‘ ‘ -f 1`<br />
+                          printf ‘\t {\n’<br />
+                          printf “\t\t\t\”{#REDISPORT}\”:\”${port[${key}]}\”},\n”<br />
+                     else [[ “${key}” -eq “((${#port[@]}-1))” ]]<br />
+              socket=`ps aux|grep ${port[${key}]}|grep -v grep|awk -F ‘=’ ‘{print $10}’|cut -d ‘ ‘ -f 1`<br />
+                          printf ‘\t {\n’<br />
+                          printf “\t\t\t\”{#REDISPORT}\”:\”${port[${key}]}\”}\n”<br />
+                       fi<br />
+               done<br />
+                          printf ‘\t ]\n’<br />
+                          printf ‘}\n’<br />
+}<br />
+$1</p>
+
+<p>验证脚步是否正常</p>
+
+<p>json监控redis的json展示</p>
+
+<p># bash redis_low_discovery.sh redis<br />
+{<br />
+         ”data”:[<br />
+          {<br />
+                            “{#REDISPORT}”:”6381”},<br />
+          {<br />
+                            “{#REDISPORT}”:”6382”}<br />
+          ]<br />
+}</p>
+
+<p>添加UserParameter</p>
+
+<p>UserParameter=zabbix_low_discovery</p>
+
+<ul>
+  <li>
+    <p>,/bin/bash /etc/zabbix/scripts/redis_low_discovery.sh $1<br />
+UserParameter=redis_stats</p>
+  </li>
+  <li>
+    <table>
+      <tbody>
+        <tr>
+          <td>,(/bin/echo info; sleep 1)</td>
+          <td>telnet 127.0.0.1 $1   2&gt;&amp;1</td>
+          <td>grep $2</td>
+          <td>cut -d : -f2</td>
+        </tr>
+      </tbody>
+    </table>
+  </li>
+</ul>
+
+<p>注：zabbix_agentd.conf配置文件中吧UnsafeUserParameters=1设置为1并打开注释即可，这里我的redis示例没有设置密码，如果有密码就加上-a password，telnet对空密码可以。有密码的话telnet换成$(which redis-cli)。然后重启agent即可</p>
+
+<p>把redis_low_discovery.sh文件存放到/etc/zabbix/scripts/目录下，然后给与755权限，并修改用户与组为zabbix，同时允许zabbix用户无密码运行</p>
+
+<p>echo “zabbix ALL=(root) NOPASSWD:/bin/netstat”»/etc/sudoers</p>
+
+<p>关闭requiretty</p>
+
+<p>sed -i ‘s/^Defaults.*.requiretty/#Defaults    requiretty/’ /etc/sudoers</p>
+
+<p>如果不关闭requiretty的话，无法获取数据以及客户端日志提示如下信息</p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094843wsx6gmmwbgtgxpnk.png" alt="" /></p>
+
+<p>2、server端操作</p>
+
+<p>使用zabbix_get获取redis键值</p>
+
+<p># zabbix_get -s 1.1.1.1 -k zabbix_low_discovery[redis]<br />
+{<br />
+“data”:[<br />
+{<br />
+“{#REDISPORT}”:”6380”},<br />
+{<br />
+“{#REDISPORT}”:”6381”}<br />
+]<br />
+}</p>
+
+<p>redis每秒更新时间</p>
+
+<p># zabbix_get -s 1.1.1.1 -k redis_stats[6381,uptime_in_seconds]<br />
+8</p>
+
+<p>3、zabbix-server web界面导入模板以及主机连接模板，还需要设置正则等</p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094843qtzl15fl0pl691t6.png" alt="" /> </p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094842hctpq4cfgpbptzg8.png" alt="" /> <br />
+<img src="https://www.iyunv.com/data/attachment/forum/201607/11/094842nxrxcqrpbx3q5xqp.png" alt="" /> </p>
+
+<p>设置正则</p>
+
+<p>在“管理”—&gt; “一般”—&gt;“正则表达式”里，选择“新的正则表达式”</p>
+
+<p>设置如下：</p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094841ewauzhasti9euw9w.png" alt="" /> </p>
+
+<p>name：Redis regex<br />
+Result TRUE  = ^(6380|6381)$<br />
+<img src="https://www.iyunv.com/data/attachment/forum/201607/11/094841cywt35tpe0dp3y5z.png" alt="" /> </p>
+
+<p>点击test，输入相应的字符串，至少匹配一个测试下。。有N个redis端口就写N个，随意填个存在的端口即可。。，没问题后点击update即可</p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094840y9z4f4ayyfb66aaa.png" alt="" /> </p>
+
+<p>最后把主机连接到模板上即可，默认间隔时间1小时，方便测试我改成60s，数据收集后然后改过了即可</p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094840bxz1pb9pquzpxezx.png" alt="" /> </p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094839c0g4444bwxwbddbk.png" alt="" /> </p>
+
+<p>稍等片刻查看结果图形</p>
+
+<p><img src="https://www.iyunv.com/data/attachment/forum/201607/11/094839wrh9rz4rkzh897ka.png" alt="" /> </p>
+
+<p>问题总结：</p>
+
+<p>自动发现redis多实例问题总结如下：</p>
+
+<p>现象是：redis多实例监控无法获取对应的item？</p>
+
+<p>检查思路如下：</p>
+
+<p>1：agent端可以使用脚步获取json化的信息</p>
+
+<p>2：server端可以zabbix_get获取json化信息以及item的值</p>
+
+<p>注：基于以上2步骤，按理说可以获取到相应的item值了。</p>
+
+<p>3：打开agent端debug模式获取更多的日志信息，日志无问题，显示过程中没有显示json化的item</p>
+
+<p>4：检查redis多实例模板中自动发现规则的键值与agent端中UnsafeUserParameters中定义键值不一样，修改与模板中对应的键值一样即可，重启agent即可</p>
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

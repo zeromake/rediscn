@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>redis启动流程（二） -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p>在上一篇<a href="http://www.ituring.com.cn/article/265187">redis启动流程（一）</a>介绍了redis启动过程中几个主要的函数，预留了两个函数<strong>initServer()</strong> 和 <strong>aeMain()</strong> 还没有分析，因为这两个函数做的事情比较多，要讲的篇幅也比较大所以就新开一篇专门来讲。</p>
+
+<p>以下是<strong>initServer()</strong> 和 <strong>aeMain()</strong> 函数的执行流程图，带颜色的函数是比较重要的函数。</p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161108001_001.jpg" alt="" /></p>
+
+<h1 id="initserver">initServer()</h1>
+
+<h2 id="1createsharedobjects">1.createSharedObjects()</h2>
+
+<p>这个函数主要是创建一些共享的全局对象，我们平时在跟redis服务交互的时候，如果有遇到错误，会收到一些固定的错误信息或者字符串比如：<strong>-ERR syntax error，-ERR no such key</strong>。这些字符串对象都是在这个函数里面进行初始化的。</p>
+
+<h2 id="2adjustopenfileslimit">2.adjustOpenFilesLimit()</h2>
+
+<p>该函数主要检查下系统的可允许打开文件句柄数，对于redis来说至少要<strong>32</strong>个文件句柄，如果检测到环境不合适，会去修改环境变量，以适合redis的运行。</p>
+
+<h2 id="3aecreateeventloop">3.aeCreateEventLoop()</h2>
+
+<p>这个函数很重要，redis的事件对象就是在这个函数里面创建的，包括一些高并发异步机制对象也是在这里面初始化的，对于异步机制对象的选择可以看到redis是这样一个顺序<strong>evport-&gt;epoll-&gt;kqueue-&gt;select</strong>，这里我们只分析epoll的这个样例其它样例八九不离十。</p>
+
+<h2 id="4listentoport">4.listenToPort()</h2>
+
+<p>从函数名可以很清楚知道这个函数就是为redis启动监听TCP端口。</p>
+
+<h2 id="5anetunixserver">5.anetUnixServer()</h2>
+
+<p>这个函数则是启动uinx socket的监听。</p>
+
+<h2 id="6aecreatetimeevent">6.aeCreateTimeEvent()</h2>
+
+<p>这个函数主要作为定时任务的注册，在这里redis注册了<strong>serverCron()</strong> 的定时任务,时间间隔是1毫秒，这个是首次，再执行一次之后就会对时间间隔进行重新设定。</p>
+
+<h2 id="7aecreatefileevent">7.aeCreateFileEvent()</h2>
+
+<p>这个函数主要作为事件任务的注册，这里首先对刚才监听的socket句柄的事件和unix socket句柄的事件加入到事件链表当中，而且是只读事件。</p>
+
+<h1 id="aemain">aeMain()</h1>
+
+<h2 id="1aeprocessevents">1.aeProcessEvents()</h2>
+
+<p>这个函数让redis进入了事件循环监听，定时任务事件和读写事件都监听，从代码上可以看出如果有读写事件则优先执行，然后才是执行定时任务事件。</p>
+
+<h2 id="2accepttcphandler">2.acceptTcpHandler()</h2>
+
+<p>当有新的连接接入的时候，该函数就会被调用，在比较新的版本里面作者为了提高效率，在该函数中最多可以处理<strong>MAX_ACCEPTS_PER_CALL=1000</strong>次的连接接入。以前的版本是调用一次只处理一个新连接。处理完一个连接后，该函数会把<strong>readQueryFromClient</strong>这个函数和连接的socket关联上然后注册到事件队列里面。</p>
+
+<h2 id="3acceptunixhandler">3.acceptUnixHandler()</h2>
+
+<p>该函数执行的逻辑和<strong>acceptTcpHandler()</strong> 函数差不多，唯一的区别就是从unix socket 来接收新连接，其它逻辑都一样。</p>
+
+<h2 id="4servercron">4.serverCron()</h2>
+
+<p>该函数是redis的定时任务，也是唯一的定时任务，第一次执行的时间间隔是1毫秒，我看了下代码后面按默认的配置是100毫秒执行一次，可是网上有文章说是10毫秒一次，这个就比较有意思了。这个定时任务执行的事情非常多，大致罗列下：</p>
+
+<ul>
+  <li>
+    <p>更新了下cache的时间</p>
+  </li>
+  <li>
+    <p>更新LRU锁的值</p>
+  </li>
+  <li>
+    <p>记录内存使用最高值</p>
+  </li>
+  <li>
+    <p>打印一些数据库的信息</p>
+  </li>
+  <li>
+    <p>打印连接的客户端信息</p>
+  </li>
+  <li>
+    <p>对客户端一些状态进行检测</p>
+  </li>
+  <li>
+    <p>对数据库一些状态进行检测</p>
+  </li>
+  <li>
+    <p>维护RDB文件和AOF文件</p>
+  </li>
+  <li>
+    <p>按一定条件删除一些客户端</p>
+  </li>
+  <li>
+    <p>主备数据同步</p>
+  </li>
+</ul>
+
+<h2 id="5readqueryfromclient">5.readQueryFromClient()</h2>
+
+<p>该函数就是处理从客户端那边读到的请求，根据相应的请求做出相应处理，需要响应的话，填充好发送缓冲区，然后把<strong>sendReplyToClient()</strong> 加入到事件链表中。</p>
+
+<h2 id="6sendreplytoclient">6.sendReplyToClient()</h2>
+
+<p>该函数把发送缓冲区的数据发送到客户端去，如果没有任何可发送的内容，就把自己从事件链表中删除。</p>
+
+<h1 id="总结">总结</h1>
+
+<p>上面的函数调用流程图和函数功能解释，基本把redis进行网络服务前的准备工作和服务流程介绍了个大概，让我比较震撼的是redis是靠单线程在进行网络服务，依靠高效的异步机制来提供高性能的服务，在它的任务里面既要处理读写事件，又要执行定时任务，任何一环节的效率低下都会影响到整个服务的质量，所以每个环节都要尽量做到高效。对作者很是钦佩，redis源码也是一个很好的学习样例。</p>
+
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

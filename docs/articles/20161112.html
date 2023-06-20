@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>使用Redis和Go开发高性能推荐引擎 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p>Next generation user facing applications are expected to include a built-in recommendations engine that tells the user what he or she’s likely to “like,” “purchase”, “read” or “listen to” next. <a href="http://redis.io/">Redis</a>, the popular open source, in-memory database known for its in-database analytics capability, and <a href="https://golang.org/">Go</a>, an open source programming language that makes it easy to build reliable and efficient software, combine to deliver a simple, high performance recommendations engine that doesn’t require many system resources. This paper outlines the algorithm and code necessary to implement a collaborative filtering approach to generating recommendations.</p>
+
+<p>The supporting code can be found at <a href="https://github.com/RedisLabs/redis-recommend">https://github.com/RedisLabs/redis-recommend</a>.</p>
+
+<p><strong>What is a recommendations engine?</strong></p>
+
+<p>A recommendations engine is an application or micro-service that presents users with the choices they are most likely to make next. Recommendations could include the next music track a user is likely to want to hear, the next movie that they might watch or the next step they’ll choose while making a reservation.</p>
+
+<p>At a system level, recommendations engines match users with items they are most likely to be interested in. By pushing relevant, tailor-made items to users, application developers can encourage users to purchase relevant items, increase their time spent on a site or in the app, or click on the right ads – ultimately helping maximize revenues, usage or eyeballs.</p>
+
+<p>Effective recommendation engines need to meet the following criteria:</p>
+
+<ol>
+  <li>
+    <p>Generate the right and relevant choices for their users (this usually depends on the algorithm chosen)</p>
+  </li>
+  <li>
+    <p>Provide high performance, with choices presented to users in real-time</p>
+  </li>
+  <li>
+    <p>Be efficient with system resources, as with any well-written application</p>
+  </li>
+</ol>
+
+<p><strong>Approaches to building a recommendations engine</strong></p>
+
+<p>There are two basic approaches for building recommendation engines:</p>
+
+<p><strong>Content-based classification:</strong></p>
+
+<p>This approach relies on classification by a large number of item and user attributes, assigning each user to possible classes of items.</p>
+
+<ul>
+  <li>
+    <p><strong>Pros:</strong></p>
+
+    <ul>
+      <li>
+        <p>Can be very targeted</p>
+      </li>
+      <li>
+        <p>Allows detailed control by the system owner</p>
+      </li>
+      <li>
+        <p>Does not require user history</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Cons:</strong></p>
+
+    <ul>
+      <li>
+        <p>Requires deep knowledge of items</p>
+      </li>
+      <li>
+        <p>Complicated data model</p>
+      </li>
+      <li>
+        <p>A lot of manual work entering items</p>
+      </li>
+      <li>
+        <p>Usually requires users to enter a lot of details</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Best for:</strong> dating, restaurant recommendations, etc.</p>
+  </li>
+</ul>
+
+<p><strong>Collaborative filtering:</strong></p>
+
+<p>This approach taps into user behavior and makes recommendations based on actions made by other users with similar behavior.</p>
+
+<ul>
+  <li>
+    <p><strong>Pros:</strong></p>
+
+    <ul>
+      <li>
+        <p>Very generic, content of the item is irrelevant</p>
+      </li>
+      <li>
+        <p>Can generate surprisingly interesting results</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Cons:</strong></p>
+
+    <ul>
+      <li>
+        <p>Requires a significant level of user history before recommendations are viable</p>
+      </li>
+      <li>
+        <p>an be computationally heavy</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Best for:</strong> movie and music recommendations</p>
+  </li>
+</ul>
+
+<p>Both options are easily implemented with Redis, but the collaborative filtering approach fits real-time use cases best, so we chose this as the basis of our simple Redis recommendation engine.</p>
+
+<p><strong>A Simple Redis recommendation engine written in Go: redis-recommend</strong></p>
+
+<p>This project demonstrates how to build a recommendation engine with Redis, using code written in <a href="https://golang.org/">Go</a> and the <a href="https://github.com/garyburd/redigo">Redigo</a> client library.</p>
+
+<p>Redis is an open source (BSD licensed), in-memory database platform store, which can be used as a database, cache and message broker. Redis data structures are like “Lego” building blocks – they simplify the implementation of complex functionality, and are extremely efficient because data operations are performed in-memory, right next to where the data is stored, which conserves cpu and network resources.</p>
+
+<p>We will demonstrate how some Redis data structures can tremendously reduce application complexity, while delivering very high performance at high scale. For this engine, we mainly use Redis <a href="http://redis.io/topics/data-types">sorted sets</a> and the associated operations.</p>
+
+<p><strong>Why Use Redis for Recommendations?</strong></p>
+
+<p>If you look at the approaches above, both choices need set operations and sorting, and require that each be done very quickly. With Redis data structures like sorted sets, a solution is extremely easy to implement. Also, with Redis running extremely efficiently in-memory, you don’t have to worry about performance under any load conditions. Compared to a disk-based or RDBMS solution, Redis provides orders of magnitude higher throughput at much lower latencies (&lt;1ms), with very little hardware.</p>
+
+<p><strong>The Chosen Approach</strong></p>
+
+<p>With my collaborative filtering example, the algorithm is simple:</p>
+
+<p>For a given user, find the top similar users by:</p>
+
+<ol>
+  <li>
+    <p>Find all users that rated at least one (or N) common items as the user, and use them as candidates</p>
+  </li>
+  <li>
+    <p>For each candidate, calculate a score using the Root Mean Square (RMS) of the difference between their mutual item ratings</p>
+  </li>
+  <li>
+    <p>Store the top similar users for each individual user</p>
+  </li>
+</ol>
+
+<p>Now find the top item recommendations by:</p>
+
+<ol>
+  <li>
+    <p>Find all the items that were rated by the user’s top similars, but <em>have not</em> yet been rated by the individual user</p>
+  </li>
+  <li>
+    <p>Calculate the average rating for each item</p>
+  </li>
+  <li>
+    <p>Store the top items</p>
+  </li>
+</ol>
+
+<p><strong>The Redis Implementation</strong></p>
+
+<p>The main Redis objects in use will be sorted sets. For example, intersect functionality will let us easily find users who rated the same items (zinterstore):</p>
+
+<p>And if we want all the users who rated a group of items (zunionstore):</p>
+
+<p>Let’s follow the logic step by step:</p>
+
+<p><strong>Step 1 – insert rating events:</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZADD   user:U:items   R I
+ZADD item:I:scores   R U
+</code></pre></div></div>
+
+<p>Note that for our algorithm, this is all the input data we need!</p>
+
+<p>To get items for a user:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZRANGE   user:U:items   0   -1
+</code></pre></div></div>
+
+<p><strong>Step 2 – get candidates for similarity:</strong></p>
+
+<p>In order to get the similarity candidates for user (U), we need the union of all the users that have mutually rated items with U. Let’s assume U rated items I1, I2, I3:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZUNIONSTORE   ztmp 3   item:I1:scores   item:I2:scores   item:I3:scores
+</code></pre></div></div>
+
+<p>note: We stored the union in a temporary sorted set, “ztmp”.</p>
+
+<p>Now let’s use ZRANGE to fetch:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZRANGE   user:U:items   0   -1
+</code></pre></div></div>
+
+<p><strong>Step 3 – Calculate similarity for each candidate:</strong></p>
+
+<p>Now we need to calculate the similarity for each of the candidates. Assuming users U1 and U2, we want the RMS of all the differences in the ratings of the items rated by both users. Redis gives us ZINTERSTORE, so we can get the intersection between U1 and U2 items.</p>
+
+<p>In order to calculate the rating difference, we can use weights. Multiplying U1’s ratings by -1 and U2’s ratings by 1 will give us:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZINTERSTORE   ztmp 2   user:U1:items   user:U2:items   WEIGHTS 1   –1
+</code></pre></div></div>
+
+<p>After calculating the RMS on the client side, the results will be stored in the sorted set user:U1:similars.</p>
+
+<p><strong>Step 4 – Getting the candidate items:</strong></p>
+
+<p>Now that we have a sorted set of users similar to U1, we can extract the items that the similar users rated. We’ll do this with ZUNIONSTORE with all U1’s similar users, but then we need to make sure we exclude all the items U1 has already rated.</p>
+
+<p>We’ll use weights again, this time with the AGGREGATE option and ZRANGEBYSCORE command. Multiplying U1’s items by -1 and all the others by 1, and specifying the AGGREGATE MIN option will yield a sorted set that is easy to cut: All U1’s item scores will be negative, while the other user’s item scores will be positive. With ZRANGEBYSCORE, we can fetch the items with a score greater than 0, giving us just what we wanted.</p>
+
+<p>Assuming U1 with similar users U3,U5,U6:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZUNIONSTORE   ztmp 4   user:U1:items   user:U3:items   user:U5:items   user:U6:items   WEIGHTS –1   1   1   1   \ AGGREGATE MIN
+ZRANGEBYSCORE ztmp 0   inf
+</code></pre></div></div>
+
+<p><strong>Step 5 – Calculate score for each candidate item:</strong></p>
+
+<p>The last step is to calculate a score for each of the candidate items, which is the average rating given by U1’s similar users.</p>
+
+<p>To get all the ratings of an item (I) given by U1’s similars, we intersect the two sets and take only the item scores by using WEIGHTS:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZINTERSTORE   ztmp 2   user:U1:similars   item:I:scores   WEIGHTS 0   1
+</code></pre></div></div>
+
+<p>The average score given by the similar users will be calculated on the client side. The results will then be stored in a sorted set named user:U1:suggestions.</p>
+
+<p><strong>Installation</strong></p>
+
+<p>Download and install <a href="https://golang.org/doc/install">Go</a> and <a href="http://redis.io/topics/quickstart">Redis</a>.</p>
+
+<p>Install Redigo:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go   get   github.com/garyburd/redigo/redis
+</code></pre></div></div>
+
+<p>Install redis-recommend:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go   get   github.com/RedisLabs/redis-recommend  
+cd   $GOPATH/src/github.com/RedisLabs/redis-recommend/
+go   build
+</code></pre></div></div>
+
+<p><strong>How to Use The Engine</strong></p>
+
+<p>Rate an item:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./redis-recommend rate
+</code></pre></div></div>
+
+<p>Find (n) similar users for all users:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./redis-recommend batch-update [--results=]
+</code></pre></div></div>
+
+<p>Get (n) suggested items for a user:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./redis-recommend suggest  [--results=]
+</code></pre></div></div>
+
+<p>Get the probable score a user would give to an item:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./redis-recommend get-probability
+</code></pre></div></div>
+
+<p><strong>The code</strong></p>
+
+<p>The project contains two packages, main and redrec. main parses the input args, instantiates a redrec object and calls the relevant redrec functions. Package redrec implements the logic explained above using redigo as a Redis connector.</p>
+
+<p><strong>Example – the function getSuggestCandidates</strong></p>
+
+<p>getSuggestCandidates returns an array of strings containing the items rated by the input user similars:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>func   (rr   *Redrec)   getSuggestCandidates(user   string,   max int)   ([]string,   error)
+</code></pre></div></div>
+
+<p>The user’s similars are fetched using ZRANGE:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>similarUsers,   err :=   redis.Strings(rr.rconn.Do("ZRANGE",   fmt.Sprintf("user:%s:similars",   user),   0,   max))
+</code></pre></div></div>
+
+<p>Then we can build the argument list for a ZUNIONSTORE command to store all the items that similar users rated, except the ones the input user already rated. To achieve this, we add the “WEIGHTS” option with a -1 multiplier to the input user, along with the “AGGREGATE MIN” option:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>args   :=   []interface{}{}
+args = append(args, "ztmp", float64(max+1), fmt.Sprintf("user:%s:items", user))
+
+weights := []interface{}{}
+
+weights = append(weights, "WEIGHTS", -1.0)
+
+for _, simuser := range similarUsers {
+    args = append(args, fmt.Sprintf("user:%s:items", simuser))
+    weights = append(weights, 1.0)
+}
+
+args = append(args, weights...)
+args = append(args, "AGGREGATE", "MIN")
+_, err = rr.rconn.Do("ZUNIONSTORE", args...)
+</code></pre></div></div>
+
+<p>We then filter only the positive results with ZRANGEBYSCORE:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>candidates,   err :=   redis.Strings(rr.rconn.Do("ZRANGEBYSCORE",   "ztmp",   0,   "inf"))
+</code></pre></div></div>
+
+<p>Finally we delete the temporary set and return the result:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>_,   err =   rr.rconn.Do("DEL",   "ztmp")
+return   candidates,   nil
+</code></pre></div></div>
+
+<p><strong>Conclusion</strong></p>
+
+<p>As you can see from the above, with Redis sorted sets, it becomes extremely easy to implement functionality for a recommendations engine. You can even generate similarities using location, demographics, time or other parameters. Redis makes it simple and extensible to do so, due to its variety of data structures.</p>
+
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>Redis源码学习——BIO -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<h2 id="redis源码学习之bio">Redis源码学习之BIO</h2>
+
+<p>BIO顾名思义，background IO,是redis中运行的后台IO。 网上千篇一律的说法是redis是单线程单进程。 实际上redis运行过程中并不是严格单进程单线程应用。 <br />
+Redis中的多进程： <br />
+在写入备份（RDB，AOF）的时候，会fork出子进程进行备份文件的写入。 <br />
+Redis中的多线程：</p>
+
+<ol>
+  <li>
+    <p>AOF的备份模式中，如果我们设置的是AOF_FSYNC_EVERYSEC（每秒备份一次，这个设置可理解为弱同步备份），redis会create一个backgroud线程，在这个线程中执行aof备份文件的写入。</p>
+  </li>
+  <li>
+    <p>新生成的AOF文件，在覆盖旧AOF文件时。 如果在此之前AOF备份已经开启，在执行该fd的close前，我们的Redis进程与旧的AOF文件存在引用， 旧的AOF文件不会真正被删除。 所以当我们执行close(oldfd)时，旧AOF文件的被打开该文件的进程数为0，即没有进程打开过这个文件，这时这个文件在执行close时会被真正删除。 而删除旧AOF文件可能会阻塞服务，所以我们将它放到另一个线程调用。</p>
+  </li>
+  <li>
+    <p>执行DEL操作，假如碰巧这个key对应有非常多对象，那么这个删除操作会阻塞服务器几秒钟时间， 所以将删除操作放到另一个线程执行。 具体可看这篇文章： <a href="http://antirez.com/news/93">Lazy Redis is better Redis</a>。</p>
+  </li>
+</ol>
+
+<h3 id="bio">BIO</h3>
+
+<p>Redis将所有多线程操作封装到BIO中，在bio.c,bio.h中可以看到。 本文我们关注的不是具体的操作，而是Redis封装的BIO行为， 这个代码简洁，维护性好。 值得学习一下。 <br />
+BIO提供以下几个api：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void bioInit(void); //初始化BIOvoid bioCreateBackgroundJob(int type, void \*arg1, void \*arg2, void *arg3);   //新建一个BIO任务unsigned long long bioPendingJobsOfType(int type);  //获取当前BIO任务类型，队列中待执行的任务个数unsigned long long bioWaitStepOfType(int type); //阻塞等待某个类型的BIO任务的执行，返回等待任务个数void bioKillThreads(void); //中断所有BIO进程
+</code></pre></div></div>
+
+<p>BIO操作的类型：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/* Background job opcodes */#define BIO\_CLOSE\_FILE    0 /* 关闭文件*/#define BIO\_AOF\_FSYNC     1 /* AOF写入  */#define BIO\_LAZY\_FREE     2 /* 释放对象 */#define BIO\_NUM\_OPS       3 /\*BIO数\*/
+</code></pre></div></div>
+
+<p>BIO对象：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static pthread\_t bio\_threads\[BIO\_NUM\_OPS\];  //BIO线程static pthread\_mutex\_t bio\_mutex\[BIO\_NUM\_OPS\]; //BIO每个线程的mutex锁变量static pthread\_cond\_t bio\_newjob\_cond\[BIO\_NUM\_OPS\]; //BIO线程锁的条件变量， 监听这个条件变量唤起当前线程static pthread\_cond\_t bio\_step\_cond\[BIO\_NUM\_OPS\]; //BIO线程阻塞锁，bioWaitStepOfType监听这个条件变量被通知该操作的执行。static list *bio\_jobs\[BIO\_NUM\_OPS\];static unsigned long long bio\_pending\[BIO\_NUM_OPS\]; // BIO未执行的
+</code></pre></div></div>
+
+<p>我们先看初始化的时候执行的部分：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bioInit() {    for (j = 0; j &lt; BIO\_NUM\_OPS; j++) {        void \*arg = (void\*)(unsigned long) j;        if (pthread_create(&amp;thread,&amp;attr,bioProcessBackgroundJobs,arg) != 0) { // 初始化线程
+            serverLog(LL_WARNING,"Fatal: Can't initialize Background Jobs.");            exit(1);
+        }
+        bio_threads\[j\] = thread;
+    }
+}
+</code></pre></div></div>
+
+<p>主要功能分为两个部分：</p>
+
+<ol>
+  <li>
+    <p>bioCreateBackgroundJob： 创建BIO任务，插入bio_jobs，并调用pthread_cond_signal，通知进程解锁。</p>
+  </li>
+  <li>
+    <p>bioProcessBackgroundJobs： 执行BIO任务线程。 线程中通过pthread管理进程锁，当bioCreateBackgroundJob执行pthread_cond_signal通知到该任务对应的线程时，从bio_jobs读出上一个任务，并执行。</p>
+  </li>
+</ol>
+
+<h3 id="biocreatebackgroundjob">bioCreateBackgroundJob</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void bioCreateBackgroundJob(int type, void \*arg1, void \*arg2, void \*arg3) {    struct bio_job \*job = zmalloc(sizeof(*job));
+    job-&gt;time = time(NULL);
+    job-&gt;arg1 = arg1;
+    job-&gt;arg2 = arg2;
+    job-&gt;arg3 = arg3;
+    pthread\_mutex\_lock(&amp;bio\_mutex\[type\]); // 加锁 保护bio\_jobs和bio_pending的一致性
+    listAddNodeTail(bio_jobs\[type\],job);  //插入到任务队列中
+    bio_pending\[type\]++;  
+    pthread\_cond\_signal(&amp;bio\_newjob\_cond\[type\]);  //通知preocess线程，执行任务
+    pthread\_mutex\_unlock(&amp;bio_mutex\[type\]);  //解锁}
+</code></pre></div></div>
+
+<h3 id="bioprocessbackgroundjobs">bioProcessBackgroundJobs</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void \*bioProcessBackgroundJobs(void \*arg) {
+    // 使进程可以被手动kill
+    pthread\_setcancelstate(PTHREAD\_CANCEL_ENABLE, NULL);
+    pthread\_setcanceltype(PTHREAD\_CANCEL_ASYNCHRONOUS, NULL); 
+    // 加锁 确保不会有两个进程使用pthread\_cond\_wait监听同一个锁
+    pthread\_mutex\_lock(&amp;bio_mutex\[type\]);    while(1) {
+        listNode *ln;
+        /* The loop always starts with the lock hold. */        if (listLength(bio_jobs\[type\]) == 0) {
+            pthread\_cond\_wait(&amp;bio\_newjob\_cond\[type\],&amp;bio_mutex\[type\]); // 等待bioCreateBackgroundJob通知解锁            continue;
+        }
+        //取队列中第一个任务
+        ln = listFirst(bio_jobs\[type\]);
+        job = ln-&gt;value;
+        /* It is now possible to unlock the background system as we know have
+         * a stand alone job structure to process.*/
+        pthread\_mutex\_unlock(&amp;bio_mutex\[type\]); //解锁
+        // 根据type执行任务
+        // do somethings...
+        pthread\_cond\_broadcast(&amp;bio\_step\_cond\[type\]); // 广播解锁，用于解bioWaitStepOfType中的锁， 接触阻塞。
+        pthread\_mutex\_lock(&amp;bio\_mutex\[type\]); // 为下面的操作加锁，且用于下一个循环的pthread\_cond_wait阻塞。
+        listDelNode(bio\_jobs\[type\],ln);  // 操作bio\_jobs 和 bio_pending  标志这个任务已完成。
+        bio_pending\[type\]--;
+    }
+}
+</code></pre></div></div>
+
+<h3 id="pthread">pthread</h3>
+
+<p>整个BIO就是通过锁进行的阻塞后台IO。 如果我们梳理一下这个锁过程：</p>
+
+<ol>
+  <li>
+    <p>bioInit,新建线程，执行bioProcessBackgroundJobs。</p>
+  </li>
+  <li>
+    <p>bioProcessBackgroundJobs 中，pthread_mutex_lock(&amp;bio_mutex[type])，给该任务的锁变量加锁。</p>
+  </li>
+  <li>
+    <p>进入while循环， 调用pthread_cond_wait， 等待解锁。 由于mutex锁是“sleep-lock”，线程会sleep，等待唤醒。</p>
+  </li>
+  <li>
+    <p>主线程调用创建BIO任务， 调用bioCreateBackgroundJob。</p>
+  </li>
+  <li>
+    <p>bioCreateBackgroundJob中 pthread_mutex_lock(&amp;bio_mutex[type]); 又对bio_mutex[type]加锁</p>
+  </li>
+  <li>
+    <p>bioCreateBackgroundJob中pthread_cond_signal(&amp;bio_newjob_cond[type]) //发送信号，通知BIO线程继续执行。</p>
+  </li>
+  <li>
+    <p>bioCreateBackgroundJob中pthread_mutex_unlock(&amp;bio_mutex[type]); //解锁</p>
+  </li>
+  <li>
+    <p>bioProcessBackgroundJobs 中被唤醒继续进行。</p>
+  </li>
+  <li>
+    <p>执行任务完毕后，pthread_mutex_unlock解锁， pthread_cond_broadcast广播解锁。</p>
+  </li>
+  <li>
+    <p>再pthread_mutex_lock加锁 。 用于下一次while循环。</p>
+  </li>
+</ol>
+
+<p>在梳理的时候，我发现一个奇怪的地方，我们第2步在BIO线程中加锁，第5步调用bioCreateBackgroundJob在主线程中又对mutex进行了一次加锁。 而在他们之间并没有pthread_mutex_unlock执行。 为什么bioCreateBackgroundJob没有被mutex的锁阻塞？ <br />
+一切的关键都在pthread_cond_wait这个函数中。 按照我原来的理解，pthread_cond_wait应该只是进行了一次信号等待， 等到某个信号后，将mutex[type]解锁。 为什么在信号发送前，pthread_mutex_lock没有将主线程的bioCreateBackgroundJob阻塞住。 所以我猜测， pthread_cond_wait不不仅仅是一次wait signal，而是unlock+wait。 <br />
+为了验证这个猜想，我们进去看pthread_cond_wait的实现: <br />
+<a href="https://github.com/lattera/glibc/blob/master/nptl/pthread_cond_wait.c#L127">glibc中的pthread_cond_wait</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// line 93int \_\_pthread\_cond_wait (cond, mutex)// line 110
+  err = \_\_pthread\_mutex\_unlock\_usercnt (mutex, 0);  //解锁mutexdo {// line 155    lll\_futex\_wait (&amp;cond-&gt;\_\_data.\_\_futex, futex\_val, pshared);  // wait signal} while (val == seq || cond-&gt;\_\_data.\_\_woken\_seq == val);// line 193return \_\_pthread\_mutex\_cond\_lock (mutex);
+</code></pre></div></div>
+
+<p>可以看到， pthread_cond_wait 实际上就是一次 Unlock -&gt; Wait -&gt; Lock。</p>
+
+<ol>
+  <li>
+    <p><a href="https://github.com/antirez/redis">Redis源码</a></p>
+  </li>
+  <li>
+    <p><a href="https://github.com/huangz1990/redis-3.0-annotated">Redis源码注释</a></p>
+  </li>
+</ol>
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

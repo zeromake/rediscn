@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>如何在Redis中实现事务 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p><strong>事务介绍</strong></p>
+
+<p>事务(Transaction) ，是指作为单个逻辑工作单元执行的一系列操作。事务必须满足ACID原则(原子性、一致性、隔离性和持久性)。</p>
+
+<p>简单来说，事务可能包括1～N条命令，当这些命令被作为事务处理时，将会顺序执行这些命令直到完成，并返回结果，如果中途有命令失败，则会回滚所有操作。</p>
+
+<p>举个例子:</p>
+
+<ol>
+  <li>
+    <p>我们到银行ATM机取一笔钱，我们的操作可能是如下:</p>
+  </li>
+  <li>
+    <p>插卡(输入密码)</p>
+  </li>
+  <li>
+    <p>输入要取的金额</p>
+  </li>
+  <li>
+    <p>ATM吐钞</p>
+  </li>
+</ol>
+
+<p>后台在你的户头上扣掉相应金额</p>
+
+<p>整个操作是一个顺序，不可分割的整体。上一步完成后才会执行下一步，如果ATM没吐钞却扣了用户的钱，银行可是要关门了。</p>
+
+<p><strong>Redis中的事务</strong></p>
+
+<p>先来看一下事务相关的命令</p>
+
+<table>
+    <tr>
+      <td width="25%">命令原型</td>
+      <td>命令描述</td>
+    </tr>
+    <tr>
+      <td>MULTI</td>
+      <td>用于标记事务的开始，其后执行的命令都将被存入命令队列，直到执行EXEC时，这些命令才会被原子的执行。</td>
+    </tr>
+    <tr>
+      <td>EXEC</td>
+      <td>执行在一个事务内命令队列中的所有命令，同时将当前连接的状态恢复为正常状态，即非事务状态。如果在事务中执行了WATCH命令，那么只有当WATCH所监控的Keys没有被修改的前提下，EXEC命令才能执行事务队列中的所有命令，否则EXEC将放弃当前事务中的所有命令。</td>
+    </tr>
+    <tr>
+      <td>DISCARD</td>
+      <td>回滚事务队列中的所有命令，同时再将当前连接的状态恢复为正常状态，即非事务状态。如果WATCH命令被使用，该命令将UNWATCH所有的Keys。</td>
+    </tr>
+    <tr>
+      <td>
+WATCH        <em>key [key ...]</em>
+      </td>
+      <td>在MULTI命令执行之前，可以指定待监控的Keys，然而在执行EXEC之前，如果被监控的Keys发生修改，EXEC将放弃执行该事务队列中的所有命令。</td>
+    </tr>
+    <tr>
+      <td>UNWATCH</td>
+      <td>取消当前事务中指定监控的Keys，如果执行了EXEC或DISCARD命令，则无需再手工执行该命令了，因为在此之后，事务中所有被监控的Keys都将自动取消。</td>
+    </tr>
+  </table>
+
+<p>和关系型数据库中的事务相比，在Redis事务中如果有某一条命令执行失败，其后的命令仍然会被继续执行</p>
+
+<p>我们可以通过MULTI命令开启一个事务，有关系型数据库开发经验的人可以将其理解为 <strong>BEGIN TRANSACTION</strong> 语句。在该语句之后执行的命令都将被视为事务之内的操作，最后我们可以通过执行 <strong>EXEC/DISCARD</strong> 命令来提交/回滚该事务内的所有操作。这两个Redis命令可被视为等同于关系型数据库中的 <strong>COMMIT/ROLLBACK</strong> 语句。</p>
+
+<p>在事务开启之前，如果客户端与服务器之间出现通讯故障并导致网络断开，其后所有待执行的语句都将不会被服务器执行。然而如果网络中断事件是发生在客户端执行 <strong>EXEC</strong> 命令之后，那么该事务中的所有命令都会被服务器执行。</p>
+
+<p>当使用Append-Only模式时，Redis会通过调用系统函数write将该事务内的所有写操作在本次调用中全部写入磁盘。然而如果在写入的过程中出现系统崩溃，如电源故障导致的宕机，那么此时也许只有部分数据被写入到磁盘，而另外一部分数据却已经丢失。Redis服务器会在重新启动时执行一系列必要的一致性检测，一旦发现类似问题，就会立即退出并给出相应的错误提示。此时，我们就要充分利用Redis工具包中提供的redis-check-aof工具，该工具可以帮助我们定位到数据不一致的错误，并将已经写入的部分数据进行回滚。修复之后我们就可以再次重新启动Redis服务器了。</p>
+
+<p><strong>样例</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@Test
+public void test2Trans() { 
+  Jedis jedis = new Jedis("localhost"); 
+  long start = System.currentTimeMillis(); 
+  Transaction tx = jedis.multi(); 
+  for (int i = 0; i &lt; 100000; i++) { 
+    tx.set("t" + i, "t" + i); 
+  } 
+  List&lt;Object&gt; results = tx.exec(); 
+  long end = System.currentTimeMillis(); 
+  System.out.println("Transaction SET: " + ((end - start)/1000.0) + " seconds"); 
+  jedis.disconnect(); 
+}
+</code></pre></div></div>
+
+<p>得到事务结果result之后，可以检查当中是否有非OK的返回值，如果存在则说明中间执行错误，可以使用 <strong><code class="language-plaintext highlighter-rouge">DISCARD</code></strong> 来回滚执行结果。</p>
+
+<p><strong>WATCH命令</strong></p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">WATCH</code></strong> 为 <strong><code class="language-plaintext highlighter-rouge">MULTI</code></strong> 执行之前的某个Key提供监控(乐观锁)的功能，如果Key的值变化了，就会放弃事务的执行。</p>
+
+<p>当事务 <strong><code class="language-plaintext highlighter-rouge">EXEC</code></strong> 执行完成之后，就会自动 <strong><code class="language-plaintext highlighter-rouge">UNWATCH</code></strong> 。</p>
+
+<table>
+    <tr>
+      <td>Session 1</td>
+      <td>Session 2</td>
+    </tr>
+    <tr>
+      <td>
+        <table>
+          <tr>
+            <td>(1)第1步</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; get age</td>
+          </tr>
+          <tr>
+            <td>&quot;10&quot;</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; watch age</td>
+          </tr>
+          <tr>
+            <td>OK</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; multi</td>
+          </tr>
+          <tr>
+            <td>OK</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt;</td>
+          </tr>
+        </table>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <table>
+          <tr>
+            <td>(2)第2步</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; set age 30</td>
+          </tr>
+          <tr>
+            <td>OK</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; get age</td>
+          </tr>
+          <tr>
+            <td>&quot;30&quot;</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt;</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <table>
+          <tr>
+            <td>(3)第3步</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; set age 20</td>
+          </tr>
+          <tr>
+            <td>QUEUED</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; exec</td>
+          </tr>
+          <tr>
+            <td>(nil)</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt; get age</td>
+          </tr>
+          <tr>
+            <td>&quot;30&quot;</td>
+          </tr>
+          <tr>
+            <td>redis 127.0.0.1:6379&gt;</td>
+          </tr>
+        </table>
+      </td>
+      <td></td>
+    </tr>
+  </table>
+
+<p><strong>样例</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;?php  
+header("content-type:text/html;charset=utf-8");  
+$redis = new redis();  
+$result = $redis-&gt;connect('localhost', 6379);  
+$mywatchkey = $redis-&gt;get("mywatchkey");  
+$rob_total = 100;   //抢购数量  
+if($mywatchkey&lt;$rob_total){  
+    $redis-&gt;watch("mywatchkey");  
+    $redis-&gt;multi();  
+       
+    //设置延迟，方便测试效果。  
+    sleep(5);  
+    //插入抢购数据  
+    $redis-&gt;hSet("mywatchlist","user_id_".mt_rand(1, 9999),time());  
+    $redis-&gt;set("mywatchkey",$mywatchkey+1);  
+    $rob_result = $redis-&gt;exec();  
+    if($rob_result){  
+        $mywatchlist = $redis-&gt;hGetAll("mywatchlist");  
+        echo "抢购成功！&lt;br/&gt;";  
+        echo "剩余数量：".($rob_total-$mywatchkey-1)."&lt;br/&gt;";  
+        echo "用户列表：&lt;pre&gt;";  
+        var_dump($mywatchlist);  
+    }else{  
+        echo "手气不好，再抢购！";exit;  
+    }  
+}  
+?&gt;
+</code></pre></div></div>
+
+<p>在上例是一个秒杀的场景，该部分抢购的功能会被并行执行。</p>
+
+<p>通过已销售数量(mywatchkey)的监控，达到了控制库存，避免超卖的作用。</p>
+
+<p>WATCH是一个乐观锁，有利于减少并发中的冲突, 提高吞吐量。</p>
+
+<p><strong>乐观锁与悲观锁</strong></p>
+
+<p>乐观锁(Optimistic Lock)又叫共享锁(S锁)，每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据，可以使用版本号等机制。乐观锁适用于多读的应用类型，这样可以提高吞吐量。</p>
+
+<p>悲观锁(Pessimistic Lock)又叫排他锁(X锁)，每次去拿数据的时候都认为别人会修改，所以每次在拿数据的时候都会上锁，这样别人想拿这个数据就会block直到它拿到锁。传统的关系型数据库里边就用到了很多这种锁机制，比如行锁，表锁等，都是在做操作之前先上锁。</p>
+
+<p><strong>Lua脚本与事务</strong></p>
+
+<p>Lua 以可嵌入，轻量，高效著称，Redis于2.6版本之后，增加了Lua语言解析模块，可以用于一些简单的事务与逻辑运算。</p>
+
+<table>
+    <tr>
+      <td width="35%">命令原型</td>
+      <td>命令描述</td>
+    </tr>
+    <tr>
+      <td>
+EVAL        <em>script numkeys key[key ...] arg [arg...]</em>
+      </td>
+      <td>传入并执行一段Lua脚本,script为脚本内容，numkeys表示传入参数数量，key表示脚本要访问的key，arg为传入参数</td>
+    </tr>
+    <tr>
+      <td>
+EVALSHA        <em>sha1</em>
+      </td>
+      <td>通过SHA1序列调用lua_scripts字典预存的脚本</td>
+    </tr>
+    <tr>
+      <td>SCRIPT FLUSH</td>
+      <td>用于清除服务器中lua有关的脚本，释放lua_scripts字典，关闭现有的lua环境，并重新创建</td>
+    </tr>
+    <tr>
+      <td>
+SCRIPT EXISTS        <em>sha1</em>
+      </td>
+      <td>输入SHA1校验和，判断是否存在</td>
+    </tr>
+    <tr>
+      <td>
+SCRIPT LOAD        <em>script</em>
+      </td>
+      <td>与EVAL相同，创建对应的lua函数，存放到字典中</td>
+    </tr>
+    <tr>
+      <td>SCRIPT KILL</td>
+      <td>杀掉正在执行的脚本。正在执行的脚本会中断并返回错误，脚本中的写操作已被执行则不能杀死，因为违反原子性原则。此时只有手动回滚或shutdown nosave来还原数据</td>
+    </tr>
+  </table>
+
+<p><strong>应用原理</strong></p>
+
+<p>客户端将Lua脚本作为命令传给服务端，服务端读取并解析后，执行并返回结果</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; eval 'return redis.call("zrange", "name2", 0 , -1);' 0
+1) "1"
+</code></pre></div></div>
+
+<p>Redis启动时会创建一个内建的lua_script哈希表，客户端可以将脚本上传到该表，并得到一个SHA1序列。之后可以通过该序列来调用脚本。(类似存储过程)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; SCRIPT LOAD "return 'dlrow olleh'"
+"d569c48906b1f4fca0469ba4eee89149b5148092"
+ 
+redis&gt; EVALSHA d569c48906b1f4fca0469ba4eee89149b5148092 0
+"dlrow olleh"
+</code></pre></div></div>
+
+<p><strong>约束</strong></p>
+
+<p>Redis会把Lua脚本作为一个整体执行，由于Redis是单线程，因此在脚本执行期间，其他脚本或命令是无法插入执行，这个特性符合事务的原子性。</p>
+
+<p><code class="language-plaintext highlighter-rouge">TIP</code></p>
+
+<ol>
+  <li>
+    <p>表是Lua中的表达式，与很多流行语言不同。KEYS中的第一个元素是KEYS[1]，第二个是KEYS[2]（译注：不是0开始）</p>
+  </li>
+  <li>
+    <p>nil是表的结束符，[1,2,nil,3]将自动变为[1,2]，因此在表中不要使用nil。</p>
+  </li>
+  <li>
+    <p>redis.call会触发Lua中的异常，redis.pcall将自动捕获所有能检测到的错误并以表的形式返回错误内容。</p>
+  </li>
+  <li>
+    <p>Lua数字都将被转换为整数，发给Redis的小数点会丢失，返回前把它们转换成字符串类型。</p>
+  </li>
+  <li>
+    <p>确保在Lua中使用的所有KEY都在KEY表中，否则在将来的Redis版中你的脚本都有不能被很好支持的危险。</p>
+  </li>
+  <li>
+    <p>脚本要保持精简，以免阻塞其他客户端操作</p>
+  </li>
+</ol>
+
+<p><strong>一致性</strong></p>
+
+<p>为了保证脚本执行结果的一致性，重复执行同一段脚本，应该得到相同的结果。Redis做了如下约束：</p>
+
+<ul>
+  <li>
+    <p>Lua没有访问系统时间或者其他内部状态的命令。</p>
+  </li>
+  <li>
+    <p>Lua脚本在解析阶段，如果发现 RANDOMKEY 、 SRANDMEMBER 、 TIME 这类返回随机性结果的命令，且脚本中有写指令（SET）类，则会返回错误，不允许执行。</p>
+  </li>
+  <li>
+    <p>Lua脚本中调用返回无序元素的命令时，如 SMEMBERS ，Redis会在后台将命令的结果排序后传回脚本</p>
+  </li>
+  <li>
+    <p>Lua中的伪随机数生成函数 math.random 和 math.randomseed 会被替换为Redis内置的函数来执行，以保证脚本执行时的seed值不变。</p>
+  </li>
+</ul>
+
+<p><strong>样例</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>private static String getSCRIPT() {
+        return "local key = KEYS[1]\n" +
+                "local localIp = ARGV[1]\n" +
+                "\n" +
+                "local gateIp = redis.call(\"HGET\", key, \"gateIp\")\n" +
+                "if gateIp == localIp then\n" +
+                "    redis.call(\"HSET\", key, \"userStatus\", \"false\")\n" +
+                "    return 1\n" +
+                "else\n" +
+                "    return 0\n" +
+                "end";
+    }
+ 
+@Test
+public void testTrans() { 
+  ......
+  Jedis jedis = new Jedis("localhost"); 
+  result = jedis.evalsha(getSCRIPT, keys, args);
+  ......
+}
+</code></pre></div></div>
+
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

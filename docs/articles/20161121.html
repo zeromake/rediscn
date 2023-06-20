@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>开放平台API接口调用频率控制系统设计浅谈 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p>先描述下基本场景：</p>
+
+<blockquote> 
+ <p>系统API接口日均调用次数预计1亿次，提供5台服务器。<br /></p> 
+ <p>需要做两种层面的控制：</p> 
+ <p>&gt; 单IP、单应用每小时调用次数不超过10000次</p> 
+ <p>&gt; 单应用、单用户、单接口每小时调用次数不超过1000次</p> 
+ <p>要求每次对频控系统的调用的平均响应时间在1ms内。</p> 
+ <p><strong>此外，应用开发者和开放平台所属公司关心调用次数统计数据，如当天某应用所有接口被调用总次数、当天某应用某接口被调用次数、当天某应用用户使用数等。</strong></p> 
+</blockquote>
+
+<p>根据上面，我们可以直接得到系统响应度要求和计算得到系统吞吐量要求，计算公式如下：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>频控系统吞吐量（系统每秒能够处理的请求数） 
+   = 80% * 1亿 / (24小时 * 60分钟 * 60秒 * 40% * 5) = 4630tps
+</code></pre></div></div>
+
+<p>80%、40%是指一天中有80%的请求发生在40%的时间内，是粗略的估算值。5是服务器数量。所以得到吞吐量要求为4630tps。前期设计系统时必须参考这些性能指标，后期压测系统时必须根据这些指标设计测试计划。</p>
+
+<p>总结下系统设计需要达成的目标：</p>
+
+<ul>
+  <li>
+    <p>请求的响应足够快</p>
+  </li>
+  <li>
+    <p>能支撑4630tps</p>
+  </li>
+  <li>
+    <p>占用的CPU、内存等硬件资源不能太夸张（隐性设计目标）</p>
+  </li>
+</ul>
+
+<p><strong>A、数据结构设计初步尝试</strong></p>
+
+<p>计数是典型的key-value数据结构。</p>
+
+<p>可能想到的最简单最自然的方式是下面这样的：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>K(app_id, ip) =&gt; V(count, startTime, lastTime)
+K(app_id, uid, interface_id) =&gt; V(count, startTime, lastTime)
+</code></pre></div></div>
+
+<p>startTime记录的是第一次调用的发生时刻，lastTime记录的是最近一次调用的发生时刻，它们用来判断是否应该重置计数值count和是否该拒绝调用。startTime和lastTime都只精确到<strong>秒级</strong>。</p>
+
+<p>为了节省内存，有必要对key和value做特殊设计，最次的方案当然是直接拼接上面各个字段。但这是非常不合理的，我们来简单估算下：</p>
+
+<blockquote> 
+ <p>假设应用有10,000个，平均每个应用的用户数为100,000，接口数为50，独立访问IP地址为1,000,000，那么数据项总共为：</p> 
+ <p>10,000 * 1,000,000 + 10,000 * 100,000 * 50 = 600亿<br /></p> 
+ <p>那么如果每个数据项节省1个字节，能够节省的总数据存储是600G，这是非常可观的。</p> 
+</blockquote>
+
+<p>对于Key，一种更优方案是先拼接Key的字符串，然后MD5得到16位定长字符串作为Key，Key定长的话或许对性能提升也会有一定帮助。</p>
+
+<p>对于Value，count、startTime、lastTime信息不能丢失，那么或许可以考虑下面两种优化方案：</p>
+
+<ul>
+  <li>
+    <p>无损压缩Value字符串，比如使用Snappy字符串压缩算法，但压缩和解压缩会带来额外的CPU计算消耗，需要权衡</p>
+  </li>
+  <li>
+    <p><strong>计数不需要太精确，所以可以牺牲一定精确度换取空间节省</strong>。或许我们可以利用CountingBloomFilter？Key需要重新设计为：MD5(app_id, interface_id, 现在距离1970年1月1号的小时数)，Value就是CountingBloomFilter数据结构了，每个调用先根据“app_id、interface_id和现在距离1970年1月1号的小时数”计算16位MD5值，然后得到所属的CountingBloomFilter（如果没有就创建），然后每次先检查是否已达到最大插入次数，如果是则直接返回，如果不是才插入。但是我们别忘了一点：CountingBloomFilter支持最大重复插入次数为15，远小于这里的1000次和10000次。所以很遗憾，CountingBloomFilter不适合这种方案。但这是一个很好的起点，Value的数据结构虽然不能用CountingBloomFilter，但或许可以用其他的优化数据结构，可以参考：
+<a href="http://blog.csdn.net/hguisu/article/details/7856239">http://blog.csdn.net/hguisu/article/details/7856239</a> 
+还有一篇文章标题大概是用1k内存来排序亿级数组，找不到了。另外频率控制数据结构模型还可以参考“令牌桶算法”，这里不再深入，详情看：<a href="http://en.wikipedia.org/wiki/Token_bucket">http://en.wikipedia.org/wiki/Token_bucket</a></p>
+  </li>
+</ul>
+
+<p><strong>B、进一步的数据存储和数据结构设计</strong></p>
+
+<p>考虑到性能要求，肯定需要用到Cache，这里打算选用Redis做Cache。再根据上面的估算，数据项总共有600亿，所以不可能把所有数据项全部放到Redis Cache中（假设每个Cache项占100个字节，估算下需要多少内存，嘿嘿）。</p>
+
+<p>所以我这里采用冷热数据分离方案。有这么三类数据：</p>
+
+<ul>
+  <li>
+    <p>冷数据存放在MySQL数据库，按照app_id、uid进行水平Shard</p>
+  </li>
+  <li>
+    <p>不冷不热数据采用Redis Hash结构存储（这种内存结构更加紧凑）</p>
+  </li>
+  <li>
+    <p>热数据放在另外的Redis库中，并且“展开式”存储以改善访问性能</p>
+  </li>
+</ul>
+
+<p>先简单说下不冷不热数据的Redis Hash结构，Key是app_id，Field是MD5(ip, interface_id, uid, 现在距离1970年1月1号的小时数)，Value包括两个计数值，即单IP、单应用已调用次数和单应用、单接口、单用户已调用次数。这样设计相当于把本来应该存成两项的数据合并到了一个缓存数据项中。</p>
+
+<p>热数据的所谓“展开式”结构是指将上面两个维度的计数分开，即存成类似下面这两种结构：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>K：MD5(app_id, ip, 现在距离1970年1月1号的小时数)，V：count
+K：MD5(app_id, interface_id, uid, 现在距离1970年1月1号的小时数)，V：count
+</code></pre></div></div>
+
+<p>这种方案有一个小缺陷，那就是小时区间的划分不太符合用户的直觉。用户的直觉是认为真正第一次调用的时刻才是计时起点。为了满足这个需求，可以回归到A节的数据结构上，变成如下：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>K：MD5(app_id, ip)，V：count、startTime、endTime的优化数据结构
+K：MD5(app_id, interface_id, uid)，V：count、startTime、endTime的优化数据结构
+</code></pre></div></div>
+
+<p><span style="color: rgb(255, 0, 0);">&nbsp; &nbsp; 另外，我后面仔细思考过，不冷不热数据采用Redis Hash和热数据展开存储，是否真的会像我推断的那样展开存储更快？</span></p>
+<p><span style="color: rgb(255, 0, 0);">&nbsp; &nbsp; 答案是不一定。因为Redis Hash存储的话，只需要一次Redis访问外加一些解析计算开销，而展开存储需要两次Redis访问。应该不是绝对的，需实际进行测量后才能下结论。</span></p>
+
+<p>** Redis Cache失效时间：**</p>
+
+<p>如果采用的数据结构是：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>K：MD5(app_id, ip, 现在距离1970年1月1号的小时数)，V：count
+K：MD5(app_id, interface_id, uid, 现在距离1970年1月1号的小时数)，V：count
+</code></pre></div></div>
+
+<p>设置缓存失效时间为1小时。</p>
+
+<p>如果采用的数据结构是：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>K：MD5(app_id, ip)，V：count、startTime、endTime的优化数据结构
+K：MD5(app_id, interface_id, uid)，V：count、startTime、endTime的优化数据结构
+</code></pre></div></div>
+
+<p>那么建议设置缓存永不失效。</p>
+
+<p><strong>冷热数据迁移过程：</strong></p>
+
+<p>数据的冷热一直在发生着改变，所以冷热数据之间需要进行迁移。包括下面四种：</p>
+
+<ul>
+  <li>
+    <p>热数据中符合不冷不热数据标准的数据移动到不冷不热数据缓存</p>
+  </li>
+  <li>
+    <p>将不冷不热数据中符合热数据标准的数据迁移到热数据缓存</p>
+  </li>
+  <li>
+    <p>将不冷不热数据中符合冷数据标准的数据迁移到MySQL数据库</p>
+  </li>
+  <li>
+    <p>将MySQL数据库中符合不冷不热数据标准的数据迁移到不冷不热数据缓存</p>
+  </li>
+</ul>
+
+<p>判断冷热的标准可以基于下面一种或者几种：</p>
+
+<ul>
+  <li>
+    <p>每天计算一次的历史平均每小时调用次数：单应用、单IP和单应用、单接口、单用户</p>
+  </li>
+  <li>
+    <p>根据应用的用户量级来区分冷热，也就是区分热应用、不热不冷应用和冷应用。比如某个用户量级超过20万，则该应用下的接口调用数据存为热数据。然后用户量级在5万到20万之间的应用的接口调用数据存为不热不冷数据。至于用户量级低于5万的应用的接口调用数据就存为冷数据了。<strong>这种是我比较推荐的方案，因为简单科学，并且只需要控制到应用粒度</strong></p>
+  </li>
+  <li>
+    <p>基于最近50次调用的平均时间间隔来判断数据冷热，也就是对于每一个数据项还要存储一个它最近50次调用的平均时间间隔（可以借鉴下文提到的滑动窗口算法）</p>
+  </li>
+</ul>
+
+<p>比如我采用第二种划分标准。每天跑一次后台脚本将热应用、不热不冷应用和冷应用区分出来，然后缓存到Redis Cache中（应用数不会太多，百万级就了不起了，所以甚至可以存为Local Cache），类似这样：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>app_id =&gt; 1或者2或者3 # 1表示是热应用，2表示是不热不冷应用，3表示是冷应用
+</code></pre></div></div>
+
+<p>然后API接口调用时，先根据app_id去这个Cache里找出应用的热度级别，然后就知道该访问前面哪一种存储了。当然可能出现访问未命中的情况，在那种情况需要依次访问热缓存数据 =&gt; 不冷不热缓存数据 =&gt; 冷数据来确定是因为数据存储中还没有相应的Key或者是还没有及时迁移数据到正确的存储，但那种情况毕竟是很少的。</p>
+
+<p><strong>C、借债机制</strong></p>
+
+<p>比如限制某应用某个接口单用户每小时调用次数不能超过1000次，那么是否严格按照1000次的标准来哪？</p>
+
+<p>答案是否。因为用户调用接口的频率可能并不均匀，比如像下面这样：</p>
+
+<table> 
+ <tbody> 
+  <tr> 
+   <td style="word-break: break-all;"><strong>第1小时</strong></td> 
+   <td style="word-break: break-all;"><strong>第2小时</strong></td> 
+   <td style="word-break: break-all;"><strong>第3小时</strong></td> 
+  </tr> 
+  <tr> 
+   <td style="word-break: break-all;">1200</td> 
+   <td style="word-break: break-all;">700</td> 
+   <td style="word-break: break-all;">950</td> 
+  </tr> 
+ </tbody> 
+</table>
+
+<p>如果严格按照1000次标准来的话，那么第1小时内就有200次调用被拒绝。而如果采用简单的借债机制，即如允许超出1000次往上300次，那么在第一小时内的1200次调用都能成功，但欠下200的债，需要在第2小时偿还，第2小时的调用额度就变成800了，以此类推</p>
+
+<p><strong>D、RPC框架选择</strong></p>
+
+<p>频率控制系统是作为一个独立的系统供其他系统调用，所以需要一个高性能的RPC框架来保证能满足并发要求。选择Thrift，并且采用TNonblockingServer非阻塞模式。</p>
+
+<p><strong>E、滑动窗口算法</strong></p>
+
+<p>我最早听到滑动窗口算法是在大学的计算机网络课程上，它是TCP协议用来保证数据帧顺序和限制流量的一个算法。Storm中貌似也用到了滑动窗口算法来限制调用频率。所以或许可以迁移应用到这个系统的设计中。</p>
+
+<p>滑动窗口算法可以参考：<a href="http://blog.csdn.net/thisispan/article/details/7545785">http://blog.csdn.net/thisispan/article/details/7545785</a></p>
+
+<p><strong>F、服务降级</strong></p>
+
+<p>虽然调用频率控制系统是开放平台中的一个重要系统，但我们也不希望在调用频率控制系统不可用的情况下正常的数据API调用都不可用。所以频控系统应该增加一个服务开关，以实现服务降级。</p>
+
+<p>2014年11月04日22:59更新：另外API接口调用频率控制比较适合用Storm这种实时事件处理框架来处理。</p>
+
+<p>2015年03月10日22:14更新：</p>
+
+<p>数据结构可以用位运算优化，用一个长整数同时包含count、startTime、endTime信息。</p>
+
+<p>此外如果用Redis等带缓存自动失效的系统可以省略“现在距离1970年1月1日的小时数”字段，每次调用都只需要GET-COMPARE-SET。</p>
+
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

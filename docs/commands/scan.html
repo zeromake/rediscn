@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>scan 命令 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+
+<div class='text'>
+          <h1 class='command'>
+            <span class='name'></span>
+            <span class='arg'></span>
+          </h1>
+          <article>
+            <div class='article-main'>
+              <div class='metadata'>
+              </div>
+              <p><a href="/commands/scan.html">SCAN</a> 命令及其相关的 <a href="/commands/sscan.html">SSCAN</a>, <a href="/commands/hscan.html">HSCAN</a> 和 <a href="/commands/zscan.html">ZSCAN</a> 命令都用于增量迭代一个集合元素。</p>
+
+<ul>
+  <li><a href="/commands/scan.html">SCAN</a> 命令用于迭代当前数据库中的key集合。</li>
+  <li><a href="/commands/sscan.html">SSCAN</a> 命令用于迭代SET集合中的元素。</li>
+  <li><a href="/commands/hscan.html">HSCAN</a> 命令用于迭代Hash类型中的键值对。</li>
+  <li><a href="/commands/zscan.html">ZSCAN</a> 命令用于迭代SortSet集合中的元素和元素对应的分值</li>
+</ul>
+
+<p>以上列出的四个命令都支持增量式迭代，它们每次执行都只会返回少量元素，所以这些命令可以用于生产环境，而不会出现像 <a href="/commands/keys.html">KEYS</a> 或者 <a href="/commands/smembers.html">SMEMBERS</a> 命令带来的可能会阻塞服务器的问题。</p>
+
+<p>不过，<a href="/commands/smembers.html">SMEMBERS</a> 命令可以返回集合键当前包含的所有元素， 但是对于SCAN这类增量式迭代命令来说，有可能在增量迭代过程中，集合元素被修改，对返回值无法提供完全准确的保证。</p>
+
+<p>因为 <a href="/commands/scan.html">SCAN</a>, <a href="/commands/sscan.html">SSCAN</a>, <a href="/commands/hscan.html">HSCAN</a> 和 <a href="/commands/zscan.html">ZSCAN</a> 四个命令的工作方式都非常相似， 所以这个文档会一并介绍这四个命令，需要注意的是<a href="/commands/sscan.html">SSCAN</a>, <a href="/commands/hscan.html">HSCAN</a> ,<a href="/commands/zscan.html">ZSCAN</a>命令的第一个参数总是一个key； <a href="/commands/scan.html">SCAN</a> 命令则不需要在第一个参数提供任何key，因为它迭代的是当前数据库中的所有key。</p>
+
+<h2 id="scan命令的基本用法">SCAN命令的基本用法</h2>
+
+<p><a href="/commands/scan.html">SCAN</a>命令是一个基于游标的迭代器。这意味着命令每次被调用都需要使用上一次这个调用返回的游标作为该次调用的游标参数，以此来延续之前的迭代过程</p>
+
+<p>当<a href="/commands/scan.html">SCAN</a>命令的游标参数被设置为 0 时， 服务器将开始一次新的迭代， 而当服务器向用户返回值为 0 的游标时， 表示迭代已结束。</p>
+
+<p>以下是一个 SCAN 命令的迭代过程示例 :</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis 127.0.0.1:6379&gt; scan 0
+1) "17"
+2)  1) "key:12"
+    2) "key:8"
+    3) "key:4"
+    4) "key:14"
+    5) "key:16"
+    6) "key:17"
+    7) "key:15"
+    8) "key:10"
+    9) "key:3"
+   10) "key:7"
+   11) "key:1"
+redis 127.0.0.1:6379&gt; scan 17
+1) "0"
+2) 1) "key:5"
+   2) "key:18"
+   3) "key:0"
+   4) "key:2"
+   5) "key:19"
+   6) "key:13"
+   7) "key:6"
+   8) "key:9"
+   9) "key:11"
+</code></pre></div></div>
+
+<p>在上面这个例子中， 第一次迭代使用 0 作为游标， 表示开始一次新的迭代。第二次迭代使用的是第一次迭代时返回的游标 17 ，作为新的迭代参数 。</p>
+
+<p>显而易见，<strong>SCAN命令的返回值</strong> 是一个包含两个元素的数组， 第一个数组元素是用于进行下一次迭代的新游标， 而第二个数组元素则是一个数组， 这个数组中包含了所有被迭代的元素。</p>
+
+<p>在第二次调用 SCAN 命令时， 命令返回了游标 0 ， 这表示迭代已经结束， 整个数据集已经被完整遍历过了。</p>
+
+<p><strong>full iteration</strong> ：以 0 作为游标开始一次新的迭代， 一直调用 SCAN 命令， 直到命令返回游标 0 ， 我们称这个过程为一次完整遍历。</p>
+
+<h2 id="scan命令的保证">Scan命令的保证</h2>
+
+<p>SCAN命令以及其他增量式迭代命令， 在进行完整遍历的情况下可以为用户带来以下保证 ：</p>
+
+<ul>
+  <li>从完整遍历开始直到完整遍历结束期间， 一直存在于数据集内的所有元素都会被完整遍历返回； 这意味着， 如果有一个元素， 它从遍历开始直到遍历结束期间都存在于被遍历的数据集当中， 那么 SCAN 命令总会在某次迭代中将这个元素返回给用户。</li>
+  <li>同样，如果一个元素在开始遍历之前被移出集合，并且在遍历开始直到遍历结束期间都没有再加入，那么在遍历返回的元素集中就不会出现该元素。</li>
+</ul>
+
+<p>然而因为增量式命令仅仅使用游标来记录迭代状态， 所以这些命令带有以下缺点：</p>
+
+<ul>
+  <li>同一个元素可能会被返回多次。 处理重复元素的工作交由应用程序负责， 比如说， 可以考虑将迭代返回的元素仅仅用于可以安全地重复执行多次的操作上。</li>
+  <li>如果一个元素是在迭代过程中被添加到数据集的， 又或者是在迭代过程中从数据集中被删除的， 那么这个元素可能会被返回， 也可能不会。</li>
+</ul>
+
+<h2 id="scan命令每次执行返回的元素数量">SCAN命令每次执行返回的元素数量</h2>
+
+<p>SCAN增量式迭代命令并不保证每次执行都返回某个给定数量的元素,甚至可能会返回零个元素， 但只要命令返回的游标不是 0 ， 应用程序就不应该将迭代视作结束。</p>
+
+<p>不过命令返回的元素数量总是符合一定规则的， 对于一个大数据集来说， 增量式迭代命令每次最多可能会返回数十个元素；而对于一个足够小的数据集来说， 如果这个数据集的底层表示为编码数据结构（小的sets, hashes and sorted sets）， 那么增量迭代命令将在一次调用中返回数据集中的所有元素。</p>
+
+<p>如果需要的话，用户可以通过增量式迭代命令提供的<strong>COUNT</strong>选项来指定每次迭代返回元素的最大值。</p>
+
+<h2 id="count选项">COUNT选项</h2>
+
+<p>对于增量式迭代命令不保证每次迭代所返回的元素数量，我们可以使用<strong>COUNT</strong>选项， 对命令的行为进行一定程度上的调整。COUNT 选项的作用就是让用户告知迭代命令， 在每次迭代中应该从数据集里返回多少元素。使用COUNT 选项对于对增量式迭代命令相当于一种提示， 大多数情况下这种提示都比较有效的控制了返回值的数量。</p>
+
+<ul>
+  <li>COUNT 参数的默认值为 10 。</li>
+  <li>数据集比较大时，如果没有使用MATCH 选项, 那么命令返回的元素数量通常和 COUNT 选项指定的一样， 或者比 COUNT 选项指定的数量稍多一些。</li>
+  <li>在迭代一个编码为整数集合（intset，一个只由整数值构成的小集合）、 或者编码为压缩列表（ziplist，由不同值构成的一个小哈希或者一个小有序集合）时， 增量式迭代命令通常会无视 COUNT 选项指定的值， 在第一次迭代就将数据集包含的所有元素都返回给用户。</li>
+</ul>
+
+<p>注意: **并非每次迭代都要使用相同的 COUNT 值 **，用户可以在每次迭代中按自己的需要随意改变 COUNT 值， 只要记得将上次迭代返回的游标用到下次迭代里面就可以了。</p>
+
+<h2 id="match-选项">MATCH 选项</h2>
+
+<p>类似于KEYS 命令，增量式迭代命令通过给定 MATCH 参数的方式实现了通过提供一个 glob 风格的模式参数， 让命令只返回和给定模式相匹配的元素。</p>
+
+<p>以下是一个使用 <a href="/commands/match.html">MATCH</a> 选项进行迭代的示例:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis 127.0.0.1:6379&gt; sadd myset 1 2 3 foo foobar feelsgood
+(integer) 6
+redis 127.0.0.1:6379&gt; sscan myset 0 match f*
+1) "0"
+2) 1) "foo"
+   2) "feelsgood"
+   3) "foobar"
+redis 127.0.0.1:6379&gt;
+</code></pre></div></div>
+
+<p><a href="/commands/match.html">MATCH</a>功能对元素的模式匹配工作是在命令从数据集中取出元素后和向客户端返回元素前的这段时间内进行的， 所以如果被迭代的数据集中只有少量元素和模式相匹配， 那么迭代命令或许会在多次执行中都不返回任何元素。</p>
+
+<p>以下是这种情况的一个例子:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis 127.0.0.1:6379&gt; scan 0 MATCH *11*
+1) "288"
+2) 1) "key:911"
+redis 127.0.0.1:6379&gt; scan 288 MATCH *11*
+1) "224"
+2) (empty list or set)
+redis 127.0.0.1:6379&gt; scan 224 MATCH *11*
+1) "80"
+2) (empty list or set)
+redis 127.0.0.1:6379&gt; scan 80 MATCH *11*
+1) "176"
+2) (empty list or set)
+redis 127.0.0.1:6379&gt; scan 176 MATCH *11* COUNT 1000
+1) "0"
+2)  1) "key:611"
+    2) "key:711"
+    3) "key:118"
+    4) "key:117"
+    5) "key:311"
+    6) "key:112"
+    7) "key:111"
+    8) "key:110"
+    9) "key:113"
+   10) "key:211"
+   11) "key:411"
+   12) "key:115"
+   13) "key:116"
+   14) "key:114"
+   15) "key:119"
+   16) "key:811"
+   17) "key:511"
+   18) "key:11"
+redis 127.0.0.1:6379&gt;
+</code></pre></div></div>
+
+<p>可以看出，以上的大部分迭代都不返回任何元素。在最后一次迭代， 我们通过将 COUNT 选项的参数设置为 1000 ， 强制命令为本次迭代扫描更多元素， 从而使得命令返回的元素也变多了。</p>
+
+<h2 id="并发执行多个迭代">并发执行多个迭代</h2>
+
+<p>在同一时间， 可以有任意多个客户端对同一数据集进行迭代， 客户端每次执行迭代都需要传入一个游标， 并在迭代执行之后获得一个新的游标， 而这个游标就包含了迭代的所有状态， 因此， 服务器无须为迭代记录任何状态。</p>
+
+<h2 id="中止迭代">中止迭代</h2>
+
+<p>因为迭代的所有状态都保存在游标里面， 而服务器无须为迭代保存任何状态， 所以客户端可以在中途停止一个迭代， 而无须对服务器进行任何通知。即使有任意数量的迭代在中途停止， 也不会产生任何问题。</p>
+
+<h2 id="使用错误的游标">使用错误的游标</h2>
+
+<p>使用SCAN 命令传入间断的（broken）、负数、超出范围或者其他非正常的游标来执行增量式迭代并不会造成服务器崩溃， 但可能会让命令产生未定义的行为。未定义行为指的是， 增量式命令对返回值所做的保证可能会不再为真。
+只有两种游标是合法的:</p>
+
+<ul>
+  <li>在开始一个新的迭代时， 游标必须为 0 。</li>
+  <li>增量式迭代命令在执行之后返回的， 用于延续迭代过程的游标。</li>
+</ul>
+
+<h2 id="迭代能终止的前提">迭代能终止的前提</h2>
+
+<p>增量式迭代命令所使用的算法只保证在数据集的大小有界的情况下， 迭代才会停止， 换句话说， 如果被迭代数据集的大小不断地增长的话， 增量式迭代命令可能永远也无法完成一次完整迭代。</p>
+
+<p>从直觉上可以看出， 当一个数据集不断地变大时， 想要访问这个数据集中的所有元素就需要做越来越多的工作， 能否结束一个迭代取决于用户执行迭代的速度是否比数据集增长的速度更快。</p>
+
+<h2 id="返回值">返回值</h2>
+
+<p><a href="/commands/scan.html">SCAN</a>, <a href="/commands/sscan.html">SSCAN</a>, <a href="/commands/hscan.html">HSCAN</a> 和 <a href="/commands/zscan.html">ZSCAN</a> 命令都返回一个包含两个元素的 multi-bulk 回复： 回复的第一个元素是字符串表示的无符号 64 位整数（游标）， 回复的第二个元素是另一个 multi-bulk 回复， 包含了本次被迭代的元素。</p>
+
+<ul>
+  <li><a href="/commands/scan.html">SCAN</a> 命令返回的每个元素都是一个key。</li>
+  <li><a href="/commands/sscan.html">SSCAN</a> 命令返回的每个元素都是一个集合成员。</li>
+  <li><a href="/commands/hscan.html">HSCAN</a> 命令返回的每个元素都是一个键值对，一个键值对由一个键和一个值组成。</li>
+  <li><a href="/commands/zscan.html">ZSCAN</a>命令返回的每个元素都是一个有序集合元素，一个有序集合元素由一个成员（member）和一个分值（score）组成。</li>
+</ul>
+
+<h2 id="另外的例子">另外的例子</h2>
+
+<p>迭代hash中的键值对：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis 127.0.0.1:6379&gt; hmset hash name Jack age 33
+OK
+redis 127.0.0.1:6379&gt; hscan hash 0
+1) "0"
+2) 1) "name"
+   2) "Jack"
+   3) "age"
+   4) "33"
+</code></pre></div></div>
+
+            </div>
+			<div class='article-aside'>
+              <aside>
+                <h2>
+                  相关命令
+                </h2>
+                <ul>
+                  <li>
+                    <a href='/commands/del.html'>
+                      DEL
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/dump.html'>
+                      DUMP
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/exists.html'>
+                      EXISTS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/expire.html'>
+                      EXPIRE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/expireat.html'>
+                      EXPIREAT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/keys.html'>
+                      KEYS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/migrate.html'>
+                      MIGRATE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/move.html'>
+                      MOVE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/object.html'>
+                      OBJECT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/persist.html'>
+                      PERSIST
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/pexpire.html'>
+                      PEXPIRE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/pexpireat.html'>
+                      PEXPIREAT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/pttl.html'>
+                      PTTL
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/randomkey.html'>
+                      RANDOMKEY
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/rename.html'>
+                      RENAME
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/renamenx.html'>
+                      RENAMENX
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/restore.html'>
+                      RESTORE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/scan.html'>
+                      SCAN
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/sort.html'>
+                      SORT
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/touch.html'>
+                      TOUCH
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/ttl.html'>
+                      TTL
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/type.html'>
+                      TYPE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/unlink.html'>
+                      UNLINK
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/wait.html'>
+                      WAIT
+                    </a>
+                  </li>
+                </ul>
+              </aside>
+            </div>
+            </article>
+            
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+	
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=1038", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>
+
+<script src='/js/commands.js?1426205833'></script>

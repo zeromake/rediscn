@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>听滴滴大神给你讲Redis Cluster迁移遇到的坑 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<h2 id="听滴滴大神给你讲redis-cluster迁移遇到的坑">听滴滴大神给你讲Redis Cluster迁移遇到的坑</h2>
+
+<p><img src="/images/articles/20170705109/001.webp" alt="" /></p>
+
+<p>作者：李航</p>
+
+<p>编辑：邢兆柳</p>
+
+<p>作者介绍</p>
+
+<p>李航：多互联网工作经验，先后在58同城，汽车之家，优酷土豆集团,滴滴工作。目前主要在滴滴任职资深开发工程师。主要关注领域Nginx，Redis，分布式系统，分布式存储，ceph。如果对redis, ceph感兴趣的同学可以加作者微信，微信ID：Lucien_168。</p>
+
+<p><img src="/images/articles/20170705109/002.webp" alt="" /></p>
+
+<p><strong>问题背景</strong></p>
+
+<p>应@冬洪兄邀请，让我把最近在处理Redis Cluster中遇到的坑分享下，由于个人时间问题，大致整理了一个比较大，比较坑的问题，它可能会导致集群部分slot不可用，甚至需要重建集群。如果对redis cluster不了解的可以查看 redis原理分享。</p>
+
+<p>架构图如下</p>
+
+<p><img src="/images/articles/20170705109/003.webp" alt="" /></p>
+
+<p><strong>模拟迁移数据目标节点宕机场景</strong></p>
+
+<p>集群节点及槽部署信息cluster nodes</p>
+
+<p><img src="/images/articles/20170705109/004.webp" alt="" /></p>
+<ol>
+  <li>
+    <p>迁移8000实例的数据到8001实例</p>
+  </li>
+  <li>
+    <p>此时kill掉8001实例模拟目标节点宕机</p>
+  </li>
+</ol>
+
+<p><img src="/images/articles/20170705109/005.webp" alt="" /></p>
+
+<ol>
+  <li>连接8000实例查看cluster nodes发现8001实例已经fail，但是还负责槽166-234</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/006.webp" alt="" /></p>
+
+<ol>
+  <li>连接8002端口查看cluster nodes发现8001实例已经fail，但是还负责槽166-234</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/007.webp" alt="" /></p>
+
+<ol>
+  <li>连接8003端口查看cluster nodes发现8001实例已经fail，但是还负责槽166-234</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/008.webp" alt="" /></p>
+
+<ol>
+  <li>连接8004端口查看cluster nodes发现8001实例已经fail，但是还负责槽166-234</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/009.webp" alt="" /></p>
+
+<ol>
+  <li>连接8006端口(8001的slave升级为master)cluster nodes发现8001实例已经fail，但是槽166-234，在8000实例(源节点上)</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/010.webp" alt="" /></p>
+
+<p><strong>问题</strong></p>
+<ul>
+  <li>8000实例迁移数据到8001实例</li>
+  <li>kill掉8001实例(目标节点)</li>
+  <li>发现8001机器从ok-&gt;fail, 但是仍然负责一部分槽号166-234</li>
+  <li>新的slave(8006)正常升级为master</li>
+</ul>
+
+<p><strong>案例分析</strong></p>
+<ul>
+  <li>8000实例：认为槽166-234在8001实例上</li>
+  <li>8002实例：认为槽166-234在8001实例上</li>
+  <li>8003实例：认为槽166-234在8001实例上</li>
+  <li>8004实例：认为槽166-234在8001实例上</li>
+  <li>8005实例：认为槽166-234在8001实例上</li>
+  <li>8006实例：认为槽166-234在8000实例上</li>
+</ul>
+
+<p><strong>说明：</strong></p>
+
+<p>只有宕机的8001实例的slave8006升级为master之后，认为槽166-234在(8000实例)源节点上，其他的master节点均认为该槽166-234在(8001实例)目标节点上。</p>
+
+<p><strong>修复步骤</strong></p>
+<ol>
+  <li>此时通过redis-trib.rbfix 127.0.0.1:8002，不成功，报错如下</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/011.webp" alt="" /></p>
+
+<ol>
+  <li>在8001实例(源节点)上强制把166-234指向自己，并且让大家强制同意</li>
+</ol>
+
+<p>cluster setslot 166 node4ce27a0b8359a894c0ee6d2d6899df80d0910a75</p>
+
+<p>cluster setslot 234 node4ce27a0b8359a894c0ee6d2d6899df80d0910a75</p>
+
+<p>cluster bumpepoch</p>
+
+<p><img src="/images/articles/20170705109/012.webp" alt="" /></p>
+
+<ol>
+  <li>redis-trib.rb check集群</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/013.webp" alt="" /></p>
+
+<p><strong>源码分析跟踪</strong></p>
+<ol>
+  <li>植入日志打印slot-&gt;nodeid信息cluster.c clusterUpdateSlotsConfWith函数</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/014.webp" alt="" /></p>
+
+<ol>
+  <li>查询部署的clusternodes(此时，已经模拟完迁移的时候，目标节点宕机)</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/015.webp" alt="" /></p>
+
+<ol>
+  <li>分析8000实例日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/016.webp" alt="" /></p>
+
+<ol>
+  <li>分析8002实例日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/017.webp" alt="" /></p>
+
+<ol>
+  <li>分析8003实例日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/018.webp" alt="" /></p>
+
+<ol>
+  <li>分析8004实例日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/019.webp" alt="" /></p>
+
+<ol>
+  <li>分析8005实例日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/020.webp" alt="" /></p>
+
+<ol>
+  <li>分析8006实例日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/021.webp" alt="" /></p>
+
+<ol>
+  <li>分析8007实例日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/022.webp" alt="" /></p>
+
+<ol>
+  <li>分析8008实例 日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/023.webp" alt="" /></p>
+
+<ol>
+  <li>分析8009实例 日志信息142槽</li>
+</ol>
+
+<p><img src="/images/articles/20170705109/024.webp" alt="" /></p>
+
+<p><strong>说明：</strong></p>
+
+<p>迁移完的槽142， 除了8006实例(8001实例的slave升级为master的实例)，其他所有的master节点都认为8001实例目标节点。</p>
+
+<p>所有的slave节点和新的master实例8006都认为槽142在8000实例源节点。</p>
+
+<p><strong>总结</strong></p>
+
+<p>由于迁移速度比较快，虽然迁移完毕了，但是也需要一段时间同步给其他节点。而这个信息靠新的owner来同步，此时还没来得及gossip消息传播。有可能迁移结束了, 但是这个槽信息同步到了除了slave的所有节点上面。总体来说redis cluster问题还是不少的。</p>
+
+<p>在扩容的时候也遇到过脑裂的请情况，投票各自占一半的情况，最后也是通过手动强制指定slot来修复的。还有更多小问题就不细说了。</p>
+
+<p>在此，感谢@黄光星同学，饿了么在redis cluster上经验也比较多。如果大家感兴趣可以加微信群一起讨论学习。</p>
+
+<p><strong>番外</strong></p>
+
+<p>如果你有精彩分享，或者是寻求商业合作，都可以发送邮件到我们的CRUG邮箱（邮箱地址：crug@redis.cn）。</p>
+
+<p><img src="/images/articles/20170705109/025.webp" alt="" /></p>
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

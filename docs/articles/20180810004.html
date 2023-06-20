@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>网易视频云：网易HBase基准性能测试之结果篇 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p>上一篇网易视频云的技术专家给大家分享了网易HBase基准性能测试之准备篇中详细介绍了本次性能测试的基本准备情况，包括测试集群架构、单台机器软硬件配置、测试工具以及测试方法等，在此基础上本篇文章主要介绍HBase在各种测试场景下的性能指标（主要包括单次请求平均延迟和系统吞吐量）以及对应的资源利用情况，并对各种测试结果进行分析。</p>
+
+<p>测试结果</p>
+
+<p>单条记录插入</p>
+
+<p>测试参数</p>
+
+<p>总记录数为10亿，分为128个region，均匀分布在4台region server上；插入操作执行2千万次；插入请求分布遵从zipfian分布；</p>
+
+<p>测试结果</p>
+
+<p><img src="http://p3.pstatp.com/large/52d0007e7b71c3747bc" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>资源使用情况</p>
+
+<p><img src="http://p99.pstatp.com/large/52f0007ea5f26a86931" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>上图为单台RegionServer的带宽使用曲线图（资源使用情况中只列出和本次测试相关的资源曲线图，后面相关资源使用情况类似），本次测试线程为1000的情况下带宽基本维持在100M左右，对于百兆网卡来说基本上已经打满。</p>
+
+<p>结果分析</p>
+
+<p>1.吞吐量曲线分析：线程数在10~500的情况下，随着线程数的增加，系统吞吐量会不断升高；之后线程数再增加，系统吞吐量基本上不再变化。结合图3带宽资源使用曲线图可以看出，当线程数增加到一定程度，系统带宽资源基本耗尽，系统吞吐量就不再会增加。可见，HBase写操作是一个带宽敏感型操作，当带宽资源bound后，写入吞吐量基本就会稳定。</p>
+
+<p>2. 写入延迟曲线分析：随着线程数的不断增加，写入延迟也会不断增大。这是因为写入线程过多，导致CPU资源调度频繁，单个线程分配到的CPU资源会不断降低；另一方面由于线程之间可能会存在互斥操作导致线程阻塞；这些因素都会导致写入延迟不断增大。</p>
+
+<p>建议</p>
+
+<p>根据曲线显示，500线程以内的写入延迟并不大于10ms，而此时吞吐量基本最大，因此如果是单纯写入的话500线程写入会是一个比较合适的选择。</p>
+
+<p>单纯查询</p>
+
+<p>测试参数</p>
+
+<p>总记录数为10亿，分为128个region，均匀分布在4台region server上；查询操作执行2千万次；查询请求分布遵从zipfian分布；</p>
+
+<p>测试结果</p>
+
+<p><img src="http://p3.pstatp.com/large/52d0007e7b8f0ef89fb" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>资源使用情况</p>
+
+<p><img src="http://p99.pstatp.com/large/52c0007e42ebb8e92ff" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p><img src="http://p1.pstatp.com/large/52d0007e7b90b429d5a" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>图5为线程数在1000时IO利用率曲线图，图中IO利用率基本保持在100%，说明IO资源已经达到使用上限。图6为线程数在1000时系统负载曲线图，图中load1曲线表示在最近一分钟内的平均负载，load5表示最近五分钟内的平均负载。最近5分钟的负责达到了50左右，对于32核系统来说，表示此时系统负载很高，已经远远超负荷运行。</p>
+
+<p>结果分析</p>
+
+<p>1. 吞吐量曲线分析：线程数在10~500的情况下，随着线程数的增加，系统吞吐量会不断升高；之后线程数再增加，系统吞吐量基本上不再变化。结合图5、图6系统资源使用曲线图可以看出，当线程数增加到一定程度，系统IO资源基本达到上限，系统负载也特别高。IO利用率达到100%是因为大量的读操作都需要从磁盘查找数据，系统负载很高是因为HBase需要对查找的数据进行解压缩操作，解压缩操作需要耗费大量CPU资源。这两个因素结合导致系统吞吐量就不再随着线程数增肌而增加。可见，HBase读操作是一个IO/CPU敏感型操作，当IO或者CPU资源bound后，读取吞吐量基本就会稳定不变。</p>
+
+<p>2. 延迟曲线分析：随着线程数的不断增加，读取延迟也会不断增大。这是因为读取线程过多，导致CPU资源调度频繁，单个线程分配到的CPU资源会不断降低；另一方面由于线程之间可能会存在互斥操作导致线程阻塞；这些因素都会导致写入延迟不断增大。和写入延迟相比，读取延迟会更大，是因为读取涉及IO操作，IO本身就是一个耗时操作，导致延迟更高。</p>
+
+<p>建议</p>
+
+<p>根据曲线显示，500线程以内的读取延迟并不大于20ms，而此时吞吐量基本最大，因此如果是单纯读取的话500线程读取会是一个比较合适的选择。</p>
+
+<p>Range扫描查询</p>
+
+<p>测试参数</p>
+
+<p>总记录数为10亿，分为128个region，均匀分布在4台region server上；scan操作执行一千两百万次，请求分布遵从zipfian分布； scan最大长度为100条记录， scan长度随机分布且遵从uniform分布；</p>
+
+<p>测试结果</p>
+
+<p><img src="http://p9.pstatp.com/large/5300007ea8fec60638d" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>资源使用情况</p>
+
+<p><img src="http://p9.pstatp.com/large/52d0007e7bacf16b5cd" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p><img src="http://p1.pstatp.com/large/5300007ea916ab86c35" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>图8为线程数在1000时IO利用率曲线图，图中IO利用率基本保持在100%，说明IO资源已经达到使用上限。图9为线程数在1000时带宽资源使用曲线图，图中带宽资源基本也已经达到上限。</p>
+
+<p>结果分析</p>
+
+<p>1. 吞吐量曲线分析：线程数在10~500的情况下，随着线程数的增加，系统吞吐量会不断升高；之后线程数再增加，系统吞吐量基本上不再变化。结合图8 、图9资源使用曲线图可以看出，当线程数增加到一定程度，系统IO资源基本达到上限，带宽也基本达到上限。IO利用率达到100%是因为大量的读操作都需要从磁盘查找数据，而带宽负载很高是因为每次scan操作最多可以获取50Kbyte数据，TPS太高会导致数据量很大，因而带宽负载很高。两者结合导致系统吞吐量就不再随着线程数增大会增大。可见，scan操作是一个IO/带宽敏感型操作，当IO或者带宽资源bound后，scan吞吐量基本就会稳定不变。</p>
+
+<p>2. 延迟曲线分析：随着线程数的不断增加，读取延迟也会不断增大。这是因为读取线程过多，导致CPU资源调度频繁，单个线程分配到的CPU资源会不断降低；另一方面由于线程之间可能会存在互斥操作导致线程阻塞；这些因素都会导致写入延迟不断增大。和写入延迟以及单次随机查找相比，读取延迟会更大，是因为scan操作会涉及多次IO操作，IO本身就是一个耗时操作，因此会导致延迟更高。</p>
+
+<p>建议</p>
+
+<p>根据图表显示，用户可以根据业务实际情况选择100~500之间的线程数来执行scan操作。</p>
+
+<p>查询插入平衡</p>
+
+<p>测试参数</p>
+
+<p>总记录数为10亿，分为128个region，均匀分布在4台region server上；查询插入操作共执行8千万次；查询请求分布遵从zipfian分布；</p>
+
+<p>测试结果</p>
+
+<p><img src="http://p99.pstatp.com/large/5300007ea92a26ce431" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>资源使用情况</p>
+
+<p><img src="http://p3.pstatp.com/large/52c0007e4309bc0120b" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p><img src="http://p3.pstatp.com/large/52c0007e42f499fbe1d" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>图11为线程数在1000时系统IO利用率曲线图，图中IO利用率基本保持在100%，说明IO资源已经达到使用上限。图12为线程数在1000时系统负载曲线图，图中显示CPU负载资源达到了40+，对于只有32核的系统来说，已经远远超负荷工作了。</p>
+
+<p>结果分析</p>
+
+<p>1. 吞吐量曲线分析：线程数在10~500的情况下，随着线程数的增加，系统吞吐量会不断升高；之后线程数再增加，系统吞吐量变化就比较缓慢。结合图11、图12系统资源使用曲线图可以看出，当线程数增加到一定程度，系统IO资源基本达到上限，带宽也基本达到上限。IO利用率达到100%是因为大量的读操作都需要从磁盘查找数据，而系统负载很高是因为大量读取操作需要进行解压缩操作，而且线程数很大本身就需要更多CPU资源。因此导致系统吞吐量就不再会增加。可见，查询插入平衡场景下，当IO或者CPU资源bound后，系统吞吐量基本就会稳定不变。</p>
+
+<p>2. 延迟曲线分析：随着线程数的不断增加，读取延迟也会不断增大。这是因为读取线程过多，导致CPU资源调度频繁，单个线程分配到的CPU资源会不断降低；另一方面由于线程之间可能会存在互斥操作导致线程阻塞；这些因素都会导致写入延迟不断增大。图中读延迟大于写延迟是因为读取操作涉及到IO操作，比较耗时。</p>
+
+<p>建议</p>
+
+<p>根据图表显示，在查询插入平衡场景下用户可以根据业务实际情况选择100~500之间的线程数。</p>
+
+<p>插入为主</p>
+
+<p>测试参数</p>
+
+<p>总记录数为10亿，分为128个region，均匀分布在4台region server上；查询插入操作共执行4千万次；查询请求分布遵从latest分布；</p>
+
+<p>测试结果</p>
+
+<p><img src="http://p99.pstatp.com/large/5300007ea9370fda386" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>资源使用情况</p>
+
+<p><img src="http://p99.pstatp.com/large/52e0007e4c7acda294d" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p><img src="http://p99.pstatp.com/large/52c0007e431c7629495" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>图15为线程数在1000时系统带宽使用曲线图，图中系统带宽资源基本到达上限，而总体IO利用率还比较低。</p>
+
+<p>结果分析</p>
+
+<p>1. 曲线分析：线程数在10~500的情况下，随着线程数的增加，系统吞吐量会不断升高；之后线程数再增加，系统吞吐量基本上不再变化。结合图14带宽资源使用曲线图可以看出，当线程数增加到一定程度，系统带宽资源基本耗尽，系统吞吐量就不再会增加。基本同单条记录插入场景相同。</p>
+
+<p>2. 写入延迟曲线分析： 基本同单条记录插入场景。</p>
+
+<p>建议</p>
+
+<p>根据图表显示，插入为主的场景下用户可以根据业务实际情况选择500左右的线程数来执行。</p>
+
+<p>查询为主</p>
+
+<p>测试参数</p>
+
+<p>总记录数为10亿，分为128个region，均匀分布在4台region server上；查询插入操作共执行4千万次；查询请求分布遵从zipfian分布；</p>
+
+<p>测试结果</p>
+
+<p><img src="http://p99.pstatp.com/large/52e0007e4c9ecad3e2b" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>资源使用情况</p>
+
+<p><img src="http://p99.pstatp.com/large/52e0007e4ca3ce8af7d" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>图17为线程数在1000时IO利用率曲线图，图中IO利用率基本保持在100%，说明IO资源已经达到使用上限。</p>
+
+<p>结果分析</p>
+
+<p>基本分析见单纯查询一节，原理类似。</p>
+
+<p>建议</p>
+
+<p>根据图表显示，查询为主的场景下用户可以根据业务实际情况选择100~500之间的线程数来执行。</p>
+
+<p>Increment自增</p>
+
+<p>测试参数</p>
+
+<p>1亿条数据，分成16个Region，分布在4台RegionServer上；操作次数为100万次；</p>
+
+<p>测试结果</p>
+
+<p><img src="http://p99.pstatp.com/large/52d0007e7bbc358fbd4" alt="网易视频云：网易HBase基准性能测试之结果篇" /></p>
+
+<p>结果分析</p>
+
+<p>1. 线程数增加，Increment操作的吞吐量会不断增加，线程数到达100个左右时，吞吐量会达到顶峰（23785 ops/sec），之后再增加线程数，吞吐量基本维持不变;</p>
+
+<p>2. 随着线程数增加，Increment操作的平均延迟会不断增加。线程数在100以下，平均延时都在4ms以内；</p>
+
+<p>建议</p>
+
+<p>根据图表显示，查询为主的场景下用户可以根据业务实际情况选择100~500之间的线程数来执行。</p>
+
+<p>测试结果总结</p>
+
+<p>根据以上测试结果和资源利用情况可以得出如下几点：</p>
+
+<p>1. 写性能：集群吞吐量最大可以达到70000+ ops/sec，延迟在几个毫秒左右。网络带宽是主要瓶颈，如果将千兆网卡换成万兆网卡，吞吐量还可以继续增加，甚至达到目前吞吐量的两倍。</p>
+
+<p>2. 读性能：很多人对HBase的印象可能都是写性能很好、读性能很差，但实际上HBase的读性能远远超过大家的预期。集群吞吐量最大可以达到26000+，单台吞吐量可以达到8000+左右，延迟在几毫秒～20毫秒左右。IO和CPU是主要瓶颈。</p>
+
+<p>3. Range 扫描性能：集群吞吐量最大可以达到14000左右，系统平均延迟在几毫秒～60毫秒之间（线程数越多，延迟越大）；其中IO和网络带宽是主要瓶颈。</p>
+
+<p>测试注意事项</p>
+
+<p>1. 需要关注是否是全内存测试，全内存测试和非全内存测试结果相差会比较大。参考线上实际数据情况，本次测试采用非全内存读测试。是否是全内存读取决于总数据量大小、集群Jvm内存大小、Block Cache占比、访问分布是否是热点访问这四者，在JVM内存大小以及Block Cache占比不变的情况下，可以增大总数据量大小或者修改访问分布；</p>
+
+<p>2. 测试客户端是否存在瓶颈。HBase测试某些场景特别耗费带宽资源，如果单个客户端进行测试很可能会因为客户端带宽被耗尽导致无法测出实际服务器集群性能。本次测试使用6个客户端并发进行测试。</p>
+
+<p>3. 单条记录大小对测试的影响。单条记录设置太大，会导致并发插入操作占用大量带宽资源进而性能产生瓶颈。而设置太小，测试出来的TPS峰值会比较大，和线上实际数据不符。本次测试单条数据大小设置为50M，基本和实际情况相符。</p>
+
+<p>网易视频云是网易推出是PAAS级视频云服务，致力于为客户提供真正易用的视频云服务，目前已经广泛应用于在线教育、秀场直播、游戏直播、远程医疗等领域，在网易内部，也有广泛运用视频云的产品，比如网易新闻直播、网易BOBO、网易青果等。而网易视频云的技术团队全部来自网易杭州研究院十多年的技术骨干， 欢迎继续关注网易视频云。更多技术详细问题，请关注网易视频云官方网站（http://vcloud.163.com/）和网易视频云官方微信（vcloud163）进行咨询。</p>
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

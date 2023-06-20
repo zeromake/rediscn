@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>REDIS debugging -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<h1 id="redis-debugging-guide">Redis debugging guide</h1>
+
+<p>Redis is developed with a great stress on stability: we do our best with
+every release to make sure you’ll experience a very stable product and no
+crashes. However even with our best efforts it is impossible to avoid all
+the critical bugs with 100% of success.</p>
+
+<p>When Redis crashes it produces a detailed report of what happened, however
+sometimes looking at the crash report is not enough, nor it is possible for
+the Redis core team to reproduce the issue independently: in this scenario we
+need help from the user that is able to reproduce the issue.</p>
+
+<p>This little guide shows how to use GDB to provide all the information the
+Redis developers will need to track the bug more easily.</p>
+
+<h2 id="what-is-gdb">What is GDB?</h2>
+
+<p>GDB is the Gnu Debugger: a program that is able to inspect the internal state
+of another program. Usually tracking and fixing a bug is an exercise in
+gathering more information about the state of the program at the moment the
+bug happens, so GDB is an extremely useful tool.</p>
+
+<p>GDB can be used in two ways:</p>
+
+<ul>
+  <li>It can attach to a running program and inspect the state of it at runtime.</li>
+  <li>It can inspect the state of a program that already terminated using what is called a <em>core file</em>, that is, the image of the memory at the time the program was running.</li>
+</ul>
+
+<p>From the point of view of investigating Redis bugs we need to use both this
+GDB modes: the user able to reproduce the bug attaches GDB to his running Redis instance, and when the crash happens, he creates the <code class="language-plaintext highlighter-rouge">core</code> file that the in turn the developer will use to inspect the Redis internals at the time of the crash.</p>
+
+<p>This way the developer can perform all the inspections in his computer without the help of the user, and the user is free to restart Redis in the production environment.</p>
+
+<h2 id="compiling-redis-without-optimizations">Compiling Redis without optimizations</h2>
+
+<p>By default Redis is compiled with the <code class="language-plaintext highlighter-rouge">-O2</code> switch, this means that compiler
+optimizations are enabled. This makes the Redis executable faster, but at the
+same time it makes Redis (like any other program) harder to inspect using GDB.</p>
+
+<p>It is better to attach GDB to Redis compiled without optimizations using the
+<code class="language-plaintext highlighter-rouge">make noopt</code> command to compile it (instead of just using the plain <code class="language-plaintext highlighter-rouge">make</code>
+command). However if you have an already running Redis in production there is
+no need to recompile and restart it if this is going to create problems on
+your side. Even if by a lesser extent GDB still works against executables
+compiled with optimizations.</p>
+
+<p>It is great if you make sure to recompile Redis with <code class="language-plaintext highlighter-rouge">make noopt</code> after the
+first crash, so that the next time it will be simpler to track the issue.</p>
+
+<p>You should not be concerned with the loss of performances compiling Redis
+without optimizations, it is very unlikely that this will cause problems in
+your environment since it is usually just a matter of a small percentage
+because Redis is not very CPU-bound (it does a lot of I/O to serve queries).</p>
+
+<h2 id="attaching-gdb-to-a-running-process">Attaching GDB to a running process</h2>
+
+<p>If you have an already running Redis server, you can attach GDB to it, so that
+if Redis will crash it will be possible to both inspect the internals and
+generate a <code class="language-plaintext highlighter-rouge">core dump</code> file.</p>
+
+<p>After you attach GDB to the Redis process it will continue running as usually without any loss of performance, so this is not a dangerous procedure.</p>
+
+<p>In order to attach GDB the first thing you need is the <em>process ID</em> of the running Redis instance (the <em>pid</em> of the process). You can easily obtain it using <code class="language-plaintext highlighter-rouge">redis-cli</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ redis-cli info | grep process_id
+process_id:58414
+</code></pre></div></div>
+
+<p>In the above example the process ID is <strong>58414</strong>.</p>
+
+<ul>
+  <li>Login into your Redis server.</li>
+  <li>(Optional but recommended) Start <strong>screen</strong> or <strong>tmux</strong> or any other program that will make sure that your GDB session will not be closed if your ssh connection will timeout. If you don’t know what screen is do yourself a favor and <a href="http://www.linuxjournal.com/article/6340">Read this article</a></li>
+  <li>
+    <p>Attach GDB to the running Redis server typing:</p>
+
+    <p>gdb <code class="language-plaintext highlighter-rouge">&lt;path-to-redis-executable&gt;</code> <code class="language-plaintext highlighter-rouge">&lt;pid&gt;</code></p>
+
+    <p>For example: gdb /usr/local/bin/redis-server 58414</p>
+  </li>
+</ul>
+
+<p>GDB will start and will attach to the running server printing something like the following:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Reading symbols for shared libraries + done
+0x00007fff8d4797e6 in epoll_wait ()
+(gdb)
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>At this point GDB is attached but <strong>your Redis instance is blocked by GDB</strong>. In order to let the Redis instance continue the execution just type <strong>continue</strong> at the GDB prompt, and press enter.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  (gdb) continue
+  Continuing.
+</code></pre></div>    </div>
+  </li>
+  <li>Done! Now your Redis instance has GDB attached. You can wait for… the next crash :)</li>
+  <li>Now it’s time to detach your screen / tmux session, if you are running GDB using it, pressing the usual <strong>Ctrl-a a</strong> key combination.</li>
+</ul>
+
+<h2 id="after-the-crash">After the crash</h2>
+
+<p>Redis has a command to simulate a segmentation fault (in other words a bad
+crash) using the <code class="language-plaintext highlighter-rouge">DEBUG SEGFAULT</code> command (don’t use it against a real production instance of course ;). So I’ll use this command to crash my instance to show what happens in the GDB side:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) continue
+Continuing.
+
+Program received signal EXC_BAD_ACCESS, Could not access memory.
+Reason: KERN_INVALID_ADDRESS at address: 0xffffffffffffffff
+debugCommand (c=0x7ffc32005000) at debug.c:220
+220         *((char*)-1) = 'x';
+</code></pre></div></div>
+
+<p>As you can see GDB detected that Redis crashed, and was able to show me
+even the file name and line number causing the crash. This is already much
+better than the Redis crash report back trace (containing just function
+names and binary offsets).</p>
+
+<h2 id="obtaining-the-stack-trace">Obtaining the stack trace</h2>
+
+<p>The first thing to do is to obtain a full stack trace with GDB. This is as
+simple as using the <strong>bt</strong> command: (that is a short for backtrace):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) bt
+#0  debugCommand (c=0x7ffc32005000) at debug.c:220
+#1  0x000000010d246d63 in call (c=0x7ffc32005000) at redis.c:1163
+#2  0x000000010d247290 in processCommand (c=0x7ffc32005000) at redis.c:1305
+#3  0x000000010d251660 in processInputBuffer (c=0x7ffc32005000) at networking.c:959
+#4  0x000000010d251872 in readQueryFromClient (el=0x0, fd=5, privdata=0x7fff76f1c0b0, mask=220924512) at networking.c:1021
+#5  0x000000010d243523 in aeProcessEvents (eventLoop=0x7fff6ce408d0, flags=220829559) at ae.c:352
+#6  0x000000010d24373b in aeMain (eventLoop=0x10d429ef0) at ae.c:397
+#7  0x000000010d2494ff in main (argc=1, argv=0x10d2b2900) at redis.c:2046
+</code></pre></div></div>
+
+<p>This shows the backtrace, but we also want to dump the processor registers using the <strong>info registers</strong> command:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) info registers
+rax            0x0  0
+rbx            0x7ffc32005000   140721147367424
+rcx            0x10d2b0a60  4515891808
+rdx            0x7fff76f1c0b0   140735188943024
+rsi            0x10d299777  4515796855
+rdi            0x0  0
+rbp            0x7fff6ce40730   0x7fff6ce40730
+rsp            0x7fff6ce40650   0x7fff6ce40650
+r8             0x4f26b3f7   1327936503
+r9             0x7fff6ce40718   140735020271384
+r10            0x81 129
+r11            0x10d430398  4517462936
+r12            0x4b7c04f8babc0  1327936503000000
+r13            0x10d3350a0  4516434080
+r14            0x10d42d9f0  4517452272
+r15            0x10d430398  4517462936
+rip            0x10d26cfd4  0x10d26cfd4 &lt;debugCommand+68&gt;
+eflags         0x10246  66118
+cs             0x2b 43
+ss             0x0  0
+ds             0x0  0
+es             0x0  0
+fs             0x0  0
+gs             0x0  0
+</code></pre></div></div>
+
+<p>Please <strong>make sure to include</strong> both this outputs in your bug report.</p>
+
+<h2 id="obtaining-the-core-file">Obtaining the core file</h2>
+
+<p>The next step is to generate the core dump, that is the image of the memory of the running Redis process. This is performed using the <code class="language-plaintext highlighter-rouge">gcore</code> command:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) gcore
+Saved corefile core.58414
+</code></pre></div></div>
+
+<p>Now you have the core dump to send to the Redis developer, but <strong>it is important to understand</strong> that this happens to contain all the data that was inside the Redis instance at the time of the crash: Redis developers will make sure to don’t share the content with any other, and will delete the file as soon as it is no longer used for debugging purposes, but you are warned that sending the core file you are sending your data.</p>
+
+<p>If there are sensible stuff in the data set we suggest sending the dump directly to Salvatore Sanfilippo (that is the guy writing this doc) at the email address <strong>antirez at gmail dot com</strong>.</p>
+
+<h2 id="what-to-send-to-developers">What to send to developers</h2>
+
+<p>Finally you can send everything to the Redis core team:</p>
+
+<ul>
+  <li>The Redis executable you are using.</li>
+  <li>The stack trace produced by the <strong>bt</strong> command, and the registers dump.</li>
+  <li>The core file you generated with gdb.</li>
+  <li>Information about the operating system and GCC version, and Redis version you are using.</li>
+</ul>
+
+<h2 id="thank-you">Thank you</h2>
+
+<p>Your help is extremely important! Many issues can only be tracked this way, thanks! It is also possible that helping Redis debugging you’ll be among the winners of the next <a href="http://antirez.com/post/redis-moka-awards-2011.html">Redis Moka Award</a>.</p>
+
+	</article>
+	
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=887", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

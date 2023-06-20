@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>nredis-proxy 高性能Redis 服务中间件 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<h1 id="一-nredis-proxy-介绍">一、 NRedis-Proxy 介绍</h1>
+
+<p>NRedis-Proxy 是一个Redis中间件服务，第一个Java 版本开源Redis中间件，无须修改业务应用程序任何代码与配置，与业务解耦；以Spring为基础开发自定义标签，让它可配置化，使其更加容易上手；以netty 作为通信传输工具，让它具有高性能，高并发，可分布式扩展部署等特点,单片性能损耗约5%左右。</p>
+
+<h1 id="二-nredis-proxy-技术架构图">二、 NRedis-Proxy 技术架构图</h1>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_001.jpg" alt="" /></p>
+
+<h1 id="三-nredis-proxy-优势以及缺点">三、 NRedis-Proxy 优势以及缺点</h1>
+
+<p><strong>a)	功能优势</strong></p>
+
+<ol>
+  <li>
+    <p>自带连接池，简单稳定且性能高效</p>
+  </li>
+  <li>
+    <p>支持读写分离，从读按照权重算法</p>
+  </li>
+  <li>
+    <p>支持灵活主从配置策略</p>
+  </li>
+  <li>
+    <p>默认支持一致性哈希分片策略，扩展性强</p>
+  </li>
+  <li>
+    <p>分片策略与从读取策略可自定义化</p>
+  </li>
+  <li>
+    <p>支持主从自动切换，提供RedisServer监听服务</p>
+  </li>
+  <li>
+    <p>支持HA 分布式部署，节点可随意扩展</p>
+  </li>
+</ol>
+
+<p><strong>b)	天然缺点</strong></p>
+
+<p>中间件的存在，会自带网络损耗，但是网络带宽足够，可以忽略不计。相比客户端分片等策略，中间件可以解决客户端应用过多，解决M*N 问题，Redis-Server连接数不够,造成机器CPU性能降低；如下图：</p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_002.jpg" alt="" /></p>
+
+<h1 id="四-nredis-proxy-类逻辑调用图">四、 NRedis-Proxy 类逻辑调用图</h1>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_003.jpg" alt="" /></p>
+
+<h1 id="五-nredis-proxy-配置标签">五、 NRedis-Proxy 配置标签</h1>
+
+<p><strong>a)	redisProxyNode</strong></p>
+
+<table cellpadding="0" cellspacing="0"><tbody style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">序号</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 名称</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">描述</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">1</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">id</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">Spring 标签唯一标志</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">2</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">redisProxyHost</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">NRedis-proxy 对外提供主机号</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">3</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">redisProxyPort</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">NRedis-proxy 对外提供端口号</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">4</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">algorithm-ref</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">NRedis-proxy 多主分片实现类引用</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">5</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">address</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204); word-break: break-all;"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">Zookpeer 地址</span></p></td></tr></tbody></table>
+
+<p><strong>b)	redisProxyMaster</strong></p>
+
+<table cellpadding="0" cellspacing="0"><tbody style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">序号</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">名称</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">描述</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">1</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">id</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">Spring 标签唯一标志</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">2</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">host</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">RedisServer主主机名</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">3</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">port</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">RedisServer主端口号</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">4</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">timeout</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">连接超时时间</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">5</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">maxActiveConnection</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">最大活跃连接数</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">6</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">maxIdleConnection</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">最大空闲连接数</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">7</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">minConnection</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">最小连接数</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">8</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">algorithm-ref</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204); word-break: break-all;"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">NRedis-proxy 从分片读取策略类引用</span></p></td></tr></tbody></table>
+
+<p><strong>c)	redisProxyCluster</strong></p>
+
+<table cellpadding="0" cellspacing="0"><tbody style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">序号</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">名称</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">描述</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">1</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">id</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">Spring 标签唯一标志</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">2</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">host</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">RedisServer从主机名</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">3</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">port</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">RedisServer从端口号</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">4</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">timeout</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">连接超时时间</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">5</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">maxActiveConnection</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">最大活跃连接数</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">6</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">maxIdleConnection</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">最大空闲连接数</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">7</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">minConnection</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">最小连接数</span></p></td></tr><tr style="box-sizing: inherit; -webkit-tap-highlight-color: transparent;"><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">8</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204);"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">weight</span></p></td><td style="box-sizing: inherit; -webkit-tap-highlight-color: transparent; padding: 4px 8px; border-color: rgb(204, 204, 204); word-break: break-all;"><p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.75em;"><span style="font-size: 14px;">权重</span></p></td></tr></tbody></table>
+
+<p><strong>d)	默认两个分片策略</strong></p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_004.jpg" alt="" /></p>
+
+<h1 id="六-nredis-proxy-使用场景">六、 NRedis-Proxy 使用场景</h1>
+
+<p><strong>a)	项目初始团队</strong></p>
+
+<p>当一个公司成立一个研发初始团队，对于互联网公司，研发时间周期短，迭代快，没有时间与资源研发基础中间件，如果有成熟的中间服务，不参合业务代码，与应用解耦，让研发专心专一研发业务本身 ，同时又能够让后期上线业务稳定。NRedis-Proxy是一个高性能且稳定中间件服务，第一个真正意义Java 版本Redis中间件，让研发团队既可以学习，又可控！</p>
+
+<p><strong>b)	秒杀场景，应用服务较多，RedisServer较少</strong></p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_005.jpg" alt="" /></p>
+
+<p>通常静态HTML等内容，是通过CDN的部署，一般压力不大，核心瓶颈实际上在后台请求接口上。这个后端接口，必须能够支持高并发请求，同时，非常重要的一点，必须尽可能“快”，在最短的时间里返回用户的请求结果。面临下面几个问题</p>
+
+<ol>
+  <li>
+    <p>怎么样保证读取高性能，满足高并发请求？</p>
+  </li>
+  <li>
+    <p>怎么样保证数据一致性，保证MySQL 数据不丢失，与Redis 数据保持一致性</p>
+  </li>
+  <li>
+    <p>RedisServer 连接数不够，应用程序RedisClient 客户端连接数过多，造成Redis Server  机器CPU 性能降低，以至于Redis Server 性能低</p>
+  </li>
+  <li>
+    <p>Redis Server 机器性能不一样，当大流量风暴 怎么样保障高性能RedisServer 机器 支持支撑 重要的业务实时性，高并发性</p>
+  </li>
+</ol>
+
+<p><strong>解决问题方案如下图：</strong></p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_006.jpg" alt="" /></p>
+
+<p>1.怎么样保证读取高性能，满足高并发请求？</p>
+
+<p>使用内存级别NOSQL 数据-Redis，保障高性能高并发</p>
+
+<p>2.怎么样保证数据一致性，保证MySQL 数据不丢失，与Redis 数据保持一致性</p>
+
+<p>使用MQ 消息以及消息幂等性，采取补偿机制，记录错误日志，补写数据，保障数据最终一致性</p>
+
+<p>3.RedisServer 连接数不够，应用程序RedisClient 客户端连接数过多，造成Redis Server  机器CPU 性能降低，以至于Redis Server 性能低</p>
+
+<p>使用NRedis-Proxy 集群 部署，对应用程序透明化，保障连接数可用，避免此问题</p>
+
+<p>4.Redis Server 机器性能不一样，当大流量风暴 怎么样保障高性能RedisServer 机器 支持支撑 重要的业务实时性，高并发性</p>
+
+<p>自定义Redis 分片机制，采用虚拟捅算法以及配置中心系统，当流量一旦来临，在快超过最大容量时，改变分片规则以及流量，把不重要的业务流量涌向低性能机器，充分利用机器性能，保障服务性能.(后续开源)</p>
+
+<h1 id="七-nredis-proxy-部署">七、 NRedis-Proxy 部署</h1>
+
+<p><strong>1. 部署架构图</strong></p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_007.jpg" alt="" /></p>
+
+<p><strong>2. 部署环境要求</strong></p>
+
+<p>1：JDK 1.7</p>
+
+<p>2：Redis-Server</p>
+
+<p>3：Zookpeer3.4.6</p>
+
+<p><strong>3. 调试步骤</strong></p>
+
+<p>1.启动Redis Server 主机器</p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_008.jpg" alt="" /></p>
+
+<p>2.启动Redis Server</p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_009.jpg" alt="" /></p>
+
+<p>3.启动 zookpeer</p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_010.jpg" alt="" /></p>
+
+<p>4.启动NRedis-Proxy Server</p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_011.jpg" alt="" /></p>
+
+<p>5.使用Redis 命令行连接NRedis-Proxy</p>
+
+<p>    <img src="https://github.com/rediscn/rediscn/blob/master/images/articles/20161114001_012.jpg" alt="" /></p>
+
+<p><strong>4.部署方式</strong></p>
+
+<p>执行nredis-proxy-sample 中 sing.sh 文件</p>
+
+<h1 id="八nredis-proxy-未来规划">八、NRedis-Proxy 未来规划</h1>
+
+<p>1：Redis Server 集群监控报警</p>
+
+<p>2：NRedis-Proxy页面可控制流量以及RedisServer主从切换</p>
+
+<h1 id="九项目地址">九、项目地址</h1>
+
+<p>http://www.oschina.net/p/nredis-proxy</p>
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>flushdb 命令 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+
+<div class='text'>
+          <h1 class='command'>
+            <span class='name'></span>
+            <span class='arg'></span>
+          </h1>
+          <article>
+            <div class='article-main'>
+              <div class='metadata'>
+              </div>
+              <p>删除当前数据库里面的所有数据。</p>
+
+<p>这个命令永远不会出现失败。</p>
+
+<p>这个操作的时间复杂度是<code class="language-plaintext highlighter-rouge">O(N)</code>,N是当前数据库的keys数量。</p>
+
+<h2 id="返回">返回</h2>
+
+<p><a href="/topics/protocol.html#simple-string-reply">simple-string-reply</a></p>
+
+
+            </div>
+			<div class='article-aside'>
+              <aside>
+                <h2>
+                  相关命令
+                </h2>
+                <ul>
+                  <li>
+                    <a href='/commands/bgrewriteaof.html'>
+                      BGREWRITEAOF
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/bgsave.html'>
+                      BGSAVE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/client-getname.html'>
+                      CLIENT GETNAME
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/client-id.html'>
+                      CLIENT ID
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/client-kill.html'>
+                      CLIENT KILL
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/client-list.html'>
+                      CLIENT LIST
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/client-pause.html'>
+                      CLIENT PAUSE
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/client-reply.html'>
+                      CLIENT REPLY
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/client-setname.html'>
+                      CLIENT SETNAME
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/client-unblock.html'>
+                      CLIENT UNBLOCK
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/command.html'>
+                      COMMAND
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/command-count.html'>
+                      COMMAND COUNT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/command-getkeys.html'>
+                      COMMAND GETKEYS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/command-info.html'>
+                      COMMAND INFO
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/config-get.html'>
+                      CONFIG GET
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/config-resetstat.html'>
+                      CONFIG RESETSTAT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/config-rewrite.html'>
+                      CONFIG REWRITE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/config-set.html'>
+                      CONFIG SET
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/dbsize.html'>
+                      DBSIZE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/debug-object.html'>
+                      DEBUG OBJECT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/debug-segfault.html'>
+                      DEBUG SEGFAULT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/flushall.html'>
+                      FLUSHALL
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/flushdb.html'>
+                      FLUSHDB
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/info.html'>
+                      INFO
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/lastsave.html'>
+                      LASTSAVE
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/memory-doctor.html'>
+                      MEMORY DOCTOR
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/memory-help.html'>
+                      MEMORY HELP
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/memory-malloc-stats.html'>
+                      MEMORY MALLOC-STATS
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/memory-purge.html'>
+                      MEMORY PURGE
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/memory-stats.html'>
+                      MEMORY STATS
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/memory-usage.html'>
+                      MEMORY USAGE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/monitor.html'>
+                      MONITOR
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/replicaof.html'>
+                      REPLICAOF
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/role.html'>
+                      ROLE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/save.html'>
+                      SAVE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/shutdown.html'>
+                      SHUTDOWN
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/slaveof.html'>
+                      SLAVEOF
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/slowlog.html'>
+                      SLOWLOG
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/sync.html'>
+                      SYNC
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/time.html'>
+                      TIME
+                    </a>
+                  </li>
+                </ul>
+              </aside>
+            </div>
+            </article>
+            
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+	
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=959", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>
+
+<script src='/js/commands.js?1426205833'></script>

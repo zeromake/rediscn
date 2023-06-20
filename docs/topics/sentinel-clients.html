@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>REDIS sentinel-old -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p><strong>WARNING:</strong> This document is a draft and the guidelines that it contains may change in the future as the Sentinel project evolves.</p>
+
+<h1 id="guidelines-for-redis-clients-with-support-for-redis-sentinel">Guidelines for Redis clients with support for Redis Sentinel</h1>
+
+<p>Redis Sentinel is a monitoring solution for Redis instances that handles
+automatic failover of Redis masters and service discovery (who is the current
+master for a given group of instances?). Since Sentinel is both responsible
+to reconfigure instances during failovers, and to provide configurations to
+clients connecting to Redis masters or slaves, clients require to have
+explicit support for Redis Sentinel.</p>
+
+<p>This document is targeted at Redis clients developers that want to support Sentinel in their clients implementation with the following goals:</p>
+
+<ul>
+  <li>Automatic configuration of clients via Sentinel.</li>
+  <li>Improved safety of Redis Sentinel automatic failover.</li>
+</ul>
+
+<p>For details about how Redis Sentinel works, please check the <a href="/topics/sentinel">Redis Documentation</a>, as this document only contains information needed for Redis client developers, and it is expected that readers are familiar with the way Redis Sentinel works.</p>
+
+<h1 id="redis-service-discovery-via-sentinel">Redis service discovery via Sentinel</h1>
+
+<p>Redis Sentinel identify every master with a name like “stats” or “cache”.
+Every name actually identifies a <em>group of instances</em>, composed of a master
+and a variable number of slaves.</p>
+
+<p>The address of the Redis master that is used for a specific purpose inside a network may change after events like an automatic failover, a manually triggered failover (for instance in order to upgrade a Redis instance), and other reasons.</p>
+
+<p>Normally Redis clients have some kind of hard-coded configuration that specifies the address of a Redis master instance within a network as IP address and port number. However if the master address changes, manual intervention in every client is needed.</p>
+
+<p>A Redis client supporting Sentinel can automatically discover the address of a Redis master from the master name using Redis Sentinel. So instead of a hard coded IP address and port, a client supporting Sentinel should optionally be able to take as input:</p>
+
+<ul>
+  <li>A list of ip:port pairs pointing to known Sentinel instances.</li>
+  <li>The name of the service, like “cache” or “timelines”.</li>
+</ul>
+
+<p>This is the procedure a client should follow in order to obtain the master address starting from the list of Sentinels and the service name.</p>
+
+<h2 id="step-1-connecting-to-the-first-sentinel">Step 1: connecting to the first Sentinel</h2>
+
+<p>The client should iterate the list of Sentinel addresses. For every address it should try to connect to the Sentinel, using a short timeout (in the order of a few hundreds of milliseconds). On errors or timeouts the next Sentinel address should be tried.</p>
+
+<p>If all the Sentinel addresses were tried without success, an error should be returned to the client.</p>
+
+<p>The first Sentinel replying to the client request should be put at the start of the list, so that at the next reconnection, we’ll try first the Sentinel that was reachable in the previous connection attempt, minimizing latency.</p>
+
+<h2 id="step-2-ask-for-master-address">Step 2: ask for master address</h2>
+
+<p>Once a connection with a Sentinel is established, the client should retry to execute the following command on the Sentinel:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SENTINEL get-master-addr-by-name master-name
+</code></pre></div></div>
+
+<p>Where <em>master-name</em> should be replaced with the actual service name specified by the user.</p>
+
+<p>The result from this call can be one of the following two replies:</p>
+
+<ul>
+  <li>An ip:port pair.</li>
+  <li>A null reply. This means Sentinel does not know this master.</li>
+</ul>
+
+<p>If an ip:port pair is received, this address should be used to connect to the Redis master. Otherwise if a null reply is received, the client should try the next Sentinel in the list.</p>
+
+<h2 id="step-3-call-the-role-command-in-the-target-instance">Step 3: call the ROLE command in the target instance</h2>
+
+<p>Once the client discovered the address of the master instance, it should
+attempt a connection with the master, and call the <code class="language-plaintext highlighter-rouge">ROLE</code> command in order
+to verify the role of the instance is actually a master.</p>
+
+<p>If the <code class="language-plaintext highlighter-rouge">ROLE</code> commands is not available (it was introduced in Redis 2.8.12), a client may resort to the <code class="language-plaintext highlighter-rouge">INFO replication</code> command parsing the <code class="language-plaintext highlighter-rouge">role:</code> field of the output.</p>
+
+<p>If the instance is not a master as expected, the client should wait a short amount of time (a few hundreds of milliseconds) and should try again starting from Step 1.</p>
+
+<h1 id="handling-reconnections">Handling reconnections</h1>
+
+<p>Once the service name is resolved into the master address and a connection is established with the Redis master instance, every time a reconnection is needed, the client should resolve again the address using Sentinels restarting from Step 1. For instance Sentinel should contacted again the following cases:</p>
+
+<ul>
+  <li>If the client reconnects after a timeout or socket error.</li>
+  <li>If the client reconnects because it was explicitly closed or reconnected by the user.</li>
+</ul>
+
+<p>In the above cases and any other case where the client lost the connection with the Redis server, the client should resolve the master address again.</p>
+
+<h1 id="sentinel-failover-disconnection">Sentinel failover disconnection</h1>
+
+<p>Starting with Redis 2.8.12, when Redis Sentinel changes the configuration of
+an instance, for example promoting a slave to a master, demoting a master to
+replicate to the new master after a failover, or simply changing the master
+address of a stale slave instance, it sends a <code class="language-plaintext highlighter-rouge">CLIENT KILL type normal</code>
+command to the instance in order to make sure all the clients are disconnected
+from the reconfigured instance. This will force clients to resolve the master
+address again.</p>
+
+<p>If the client will contact a Sentinel with yet not updated information, the verification of the Redis instance role via the <code class="language-plaintext highlighter-rouge">ROLE</code> command will fail, allowing the client to detect that the contacted Sentinel provided stale information, and will try again.</p>
+
+<p>Note: it is possible that a stale master returns online at the same time a client contacts a stale Sentinel instance, so the client may connect with a stale master, and yet the ROLE output will match. However when the master is back again Sentinel will try to demote it to slave, triggering a new disconnection. The same reasoning applies to connecting to stale slaves that will get reconfigured to replicate with a different master.</p>
+
+<h1 id="connecting-to-slaves">Connecting to slaves</h1>
+
+<p>Sometimes clients are interested to connect to slaves, for example in order to scale read requests. This protocol supports connecting to slaves by modifying step 2 slightly. Instead of calling the following command:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SENTINEL get-master-addr-by-name master-name
+</code></pre></div></div>
+
+<p>The clients should call instead:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SENTINEL slaves master-name
+</code></pre></div></div>
+
+<p>In order to retrieve a list of slave instances.</p>
+
+<p>Symmetrically the client should verify with the <code class="language-plaintext highlighter-rouge">ROLE</code> command that the
+instance is actually a slave, in order to avoid scaling read queries with
+the master.</p>
+
+<h1 id="connection-pools">Connection pools</h1>
+
+<p>For clients implementing connection pools, on reconnection of a single connection, the Sentinel should be contacted again, and in case of a master address change all the existing connections should be closed and connected to the new address.</p>
+
+<h1 id="error-reporting">Error reporting</h1>
+
+<p>The client should correctly return the information to the user in case of errors. Specifically:</p>
+
+<ul>
+  <li>If no Sentinel can be contacted (so that the client was never able to get the reply to <code class="language-plaintext highlighter-rouge">SENTINEL get-master-addr-by-name</code>), an error that clearly states that Redis Sentinel is unreachable should be returned.</li>
+  <li>If all the Sentinels in the pool replied with a null reply, the user should be informed with an error that Sentinels don’t know this master name.</li>
+</ul>
+
+<h1 id="sentinels-list-automatic-refresh">Sentinels list automatic refresh</h1>
+
+<p>Optionally once a successful reply to <code class="language-plaintext highlighter-rouge">get-master-addr-by-name</code> is received, a client may update its internal list of Sentinel nodes following this procedure:</p>
+
+<ul>
+  <li>Obtain a list of other Sentinels for this master using the command <code class="language-plaintext highlighter-rouge">SENTINEL sentinels &lt;master-name&gt;</code>.</li>
+  <li>Add every ip:port pair not already existing in our list at the end of the list.</li>
+</ul>
+
+<p>It is not needed for a client to be able to make the list persistent updating its own configuration. The ability to upgrade the in-memory representation of the list of Sentinels can be already useful to improve reliability.</p>
+
+<h1 id="subscribe-to-sentinel-events-to-improve-responsiveness">Subscribe to Sentinel events to improve responsiveness</h1>
+
+<p>The <a href="/topics/sentinel">Sentinel documentation</a> shows how clients can connect to
+Sentinel instances using Pub/Sub in order to subscribe to changes in the
+Redis instances configurations.</p>
+
+<p>This mechanism can be used in order to speedup the reconfiguration of clients,
+that is, clients may listen to Pub/Sub in order to know when a configuration
+change happened in order to run the three steps protocol explained in this
+document in order to resolve the new Redis master (or slave) address.</p>
+
+<p>However update messages received via Pub/Sub should not substitute the
+above procedure, since there is no guarantee that a client is able to
+receive all the update messages.</p>
+
+<h1 id="additional-information">Additional information</h1>
+
+<p>For additional information or to discuss specific aspects of this guidelines, please drop a message to the <a href="https://groups.google.com/group/redis-db">Redis Google Group</a>.</p>
+
+	</article>
+	
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=897", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>zrevrangebylex 命令 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+
+<div class='text'>
+          <h1 class='command'>
+            <span class='name'></span>
+            <span class='arg'></span>
+          </h1>
+          <article>
+            <div class='article-main'>
+              <div class='metadata'>
+              </div>
+              <h2 id="1-简介"><strong>1 简介</strong></h2>
+
+<p>ZREVRANGEBYLEX 返回指定成员区间内的成员，按成员字典倒序排序, 分数必须相同。<br />
+在某些业务场景中,需要对一个字符串数组按名称的字典顺序进行倒序排列时,可以使用Redis中SortSet这种数据结构来处理。</p>
+
+<h2 id="2-语法"><strong>2 语法</strong></h2>
+
+<h3 id="21-完整示例"><strong>2.1 完整示例</strong></h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ZREVRANGEBYLEX key max min [LIMIT offset count]
+</code></pre></div></div>
+
+<h3 id="22-说明"><strong>2.2 说明</strong></h3>
+
+<table>
+    <tr>
+        <td>指令</td>
+        <td>是否必须</td>
+        <td>说明</td>
+    </tr>
+    <tr>
+        <td>ZREVRANGEBYLEX</td>
+        <td>是</td>
+        <td>指令</td>
+    </tr>
+    <tr>
+        <td>key</td>
+        <td>是</td>
+        <td>有序集合键名称</td>
+    </tr>
+    <tr>
+        <td>max</td>
+        <td>是</td>
+        <td>字典中排序位置较大的成员,必须以"["开头,或者以"("开头,可使用"+"代替</td>
+    </tr>
+    <tr>
+        <td>min</td>
+        <td>是</td>
+        <td>字典中排序位置较小的成员,必须以"["开头,或者以"("开头,可使用"-"代替</td>
+    </tr>
+    <tr>
+        <td>LIMIT</td>
+        <td>否</td>
+        <td>返回结果是否分页,指令中包含LIMIT后offset、count必须输入</td>
+    </tr>
+    <tr>
+        <td>offset</td>
+        <td>否</td>
+        <td>返回结果起始位置</td>
+    </tr>
+    <tr>
+        <td>count</td>
+        <td>否</td>
+        <td>返回结果数量</td>
+    </tr>
+</table>
+
+<p><strong>提示:</strong></p>
+
+<ul>
+  <li>分数必须相同! 如果有序集合中的成员分数有不一致的,返回的结果就不准。</li>
+  <li>成员字符串作为二进制数组的字节数进行比较。</li>
+  <li>默认是以ASCII字符集的顺序进行排列。如果成员字符串包含utf-8这类字符集的内容,就会影响返回结果,所以建议不要使用。</li>
+  <li>源码中采用C语言中<code class="language-plaintext highlighter-rouge"> memcmp() </code> 函数, 从字符的第0位到最后一位进行排序,如果前面部分相同,那么较长的字符串比较短的字符串排序靠前。</li>
+  <li>默认情况下, “max” 和 “min” 参数前必须加 “[” 符号作为开头。”[” 符号与成员之间不能有空格, 返回成员结果集会包含参数  “max”和 “min”</li>
+  <li>“max” 和 “min” 参数前可以加 “(“ 符号作为开头表示小于, “(“ 符号与成员之间不能有空格。返回成员结果集不会包含 “max” 和 “min” 成员。</li>
+  <li>可以使用 “-“ 和 “+” 表示得分最小值和最大值</li>
+  <li>“max”和 “min”  不能反,  “max”  放后面 “min”放前面会导致返回结果为空</li>
+  <li>与ZREVRANGEBYLEX获取顺序相反的指令是<a href="/commands/zrangebylex.html">ZREVRANGEBYLEX</a>。</li>
+</ul>
+
+<h2 id="3-返回值"><strong>3 返回值</strong></h2>
+
+<p>指定成员范围的元素列表。</p>
+
+<h2 id="4-示例"><strong>4 示例</strong></h2>
+
+<p>不要在分数不一致的SortSet集合中去使用 ZREVRANGEBYLEX 指令,因为获取的结果并不准确。</p>
+
+<h3 id="41-获取所有值"><strong>4.1 获取所有值</strong></h3>
+
+<p>可以使用 “-“ 和 “+” 表示最小值和最大值</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; zadd zset 0 a 0 aa 0 abc 0 apple 0 b 0 c 0 d 0 d1 0 dd 0 dobble 0 z 0 z1
+(integer) 12
+redis&gt; ZREVRANGEBYLEX zset + -
+ 1) "z1"
+ 2) "z"
+ 3) "dobble"
+ 4) "dd"
+ 5) "d1"
+ 6) "d"
+ 7) "c"
+ 8) "b"
+ 9) "apple"
+10) "abc"
+11) "aa"
+12) "a"
+</code></pre></div></div>
+
+<h3 id="42-获取分页数据"><strong>4.2 获取分页数据</strong></h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX zset + - LIMIT 0 3
+1) "z1"
+2) "z"
+3) "dobble"
+redis&gt; ZREVRANGEBYLEX zset + - LIMIT 3 3
+1) "dd"
+2) "d1"
+3) "d"
+</code></pre></div></div>
+
+<h3 id="43-获取成员之间的元素"><strong>4.3 获取成员之间的元素</strong></h3>
+
+<p>默认情况下, “max” 和 “min” 参数前必须加 “[” 符号作为开头。<br />
+“[” 符号与成员之间不能有空格, 返回成员结果集会包含参数 “min” 和 “max” 。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX zset [c [aa
+1) "c"
+2) "b"
+3) "apple"
+4) "abc"
+5) "aa"
+</code></pre></div></div>
+
+<p>“min” 和 “max”  不能反,  “min” 放前面 “max”放后面会导致返回结果为空</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX zset [aa [c
+(empty list or set)
+</code></pre></div></div>
+
+<h3 id="44-使用--小于号获取成员之间的元素"><strong>4.4 使用 “(“ 小于号获取成员之间的元素</strong></h3>
+
+<p>“max” 和 “min” 参数前可以加 “(“ 符号作为开头表示小于, “(“ 符号与成员之间不能有空格。<br />
+返回成员结果集不会包含 “max” 和 “min” 成员。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX zset (c [aa
+1) "b"
+2) "apple"
+3) "abc"
+4) "aa"
+</code></pre></div></div>
+
+<h3 id="45-ascii码的影响"><strong>4.5 ASCII码的影响</strong></h3>
+
+<p>成员字符串作为二进制数组的字节数进行比较。<br />
+默认是以ASCII字符集的顺序进行排列。<br />
+如果成员字符串包含utf-8这类字符集的内容,就会影响返回结果,所以建议不要使用。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; zadd zset 0 dB
+(integer) 1
+redis&gt; ZREVRANGEBYLEX zset + -
+ 1) "z1"
+ 2) "z"
+ 3) "dobble"
+ 4) "dd"
+ 5) "dB"
+ 6) "d1"
+ 7) "d"
+ 8) "c"
+ 9) "b"
+10) "apple"
+11) "abc"
+12) "aa"
+13) "a"
+redis&gt; ZREVRANGEBYLEX zset + - limit 0 3
+1) "z1"
+2) "z"
+3) "dobble"
+redis&gt; ZREVRANGEBYLEX zset + - limit 3 3
+1) "dd"
+2) "dB"
+3) "d1"
+</code></pre></div></div>
+
+<h2 id="5-使用场景示例">5 使用场景示例</h2>
+
+<h3 id="51-电话号码排序"><strong>5.1 电话号码排序</strong></h3>
+
+<p>我们可以将电话号码存储到SortSet中,然后根据需要来获取号段:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; zadd phone 0 13100111100 0 13110114300 0 13132110901 
+(integer) 3
+redis&gt; zadd phone 0 13200111100 0 13210414300 0 13252110901 
+(integer) 3
+redis&gt; zadd phone 0 13300111100 0 13310414300 0 13352110901 
+(integer) 3
+</code></pre></div></div>
+
+<p>从大到小获取所有号码:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX phone + -
+1) "13352110901"
+2) "13310414300"
+3) "13300111100"
+4) "13252110901"
+5) "13210414300"
+6) "13200111100"
+7) "13132110901"
+8) "13110114300"
+9) "13100111100"
+</code></pre></div></div>
+
+<p>获取132号段:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX phone (133 [132
+1) "13252110901"
+2) "13210414300"
+3) "13200111100"
+</code></pre></div></div>
+
+<p>获取132、133号段:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX phone (134 [132
+1) "13352110901"
+2) "13310414300"
+3) "13300111100"
+4) "13252110901"
+5) "13210414300"
+6) "13200111100"
+</code></pre></div></div>
+
+<h3 id="52-姓名排序"><strong>5.2 姓名排序</strong></h3>
+
+<p>将名称存储到SortSet中:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; zadd names 0 Toumas 0 Jake 0 Bluetuo 0 Gaodeng 0 Aimini 0 Aidehua 
+(integer) 6
+</code></pre></div></div>
+
+<p>获取所有人的名字倒序排列:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX names + -
+1) "Toumas"
+2) "Jake"
+3) "Gaodeng"
+4) "Bluetuo"
+5) "Aimini"
+6) "Aidehua"
+</code></pre></div></div>
+
+<p>获取名字中大写字母A开头的所有人:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX names (B [A
+1) "Aimini"
+2) "Aidehua"
+</code></pre></div></div>
+
+<p>获取名字中大写字母C到Z的所有人:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis&gt; ZREVRANGEBYLEX names [Z [C
+1) "Toumas"
+2) "Jake"
+3) "Gaodeng"
+</code></pre></div></div>
+
+            </div>
+			<div class='article-aside'>
+              <aside>
+                <h2>
+                  相关命令
+                </h2>
+                <ul>
+                  <li>
+                    <a href='/commands/bzpopmax.html'>
+                      BZPOPMAX
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/bzpopmin.html'>
+                      BZPOPMIN
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/zadd.html'>
+                      ZADD
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zcard.html'>
+                      ZCARD
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zcount.html'>
+                      ZCOUNT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zincrby.html'>
+                      ZINCRBY
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zinterstore.html'>
+                      ZINTERSTORE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zlexcount.html'>
+                      ZLEXCOUNT
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/zpopmax.html'>
+                      ZPOPMAX
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/zpopmin.html'>
+                      ZPOPMIN
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrange.html'>
+                      ZRANGE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrangebylex.html'>
+                      ZRANGEBYLEX
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrangebyscore.html'>
+                      ZRANGEBYSCORE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrank.html'>
+                      ZRANK
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrem.html'>
+                      ZREM
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zremrangebylex.html'>
+                      ZREMRANGEBYLEX
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zremrangebyrank.html'>
+                      ZREMRANGEBYRANK
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zremrangebyscore.html'>
+                      ZREMRANGEBYSCORE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrevrange.html'>
+                      ZREVRANGE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrevrangebylex.html'>
+                      ZREVRANGEBYLEX
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrevrangebyscore.html'>
+                      ZREVRANGEBYSCORE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zrevrank.html'>
+                      ZREVRANK
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zscan.html'>
+                      ZSCAN
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zscore.html'>
+                      ZSCORE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/zunionstore.html'>
+                      ZUNIONSTORE
+                    </a>
+                  </li>
+                </ul>
+              </aside>
+            </div>
+            </article>
+            
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+	
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=1092", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>
+
+<script src='/js/commands.js?1426205833'></script>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>Redis大量数据插入（redis mass-insert） -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<h1 id="redis-大量数据插入">Redis 大量数据插入</h1>
+
+<p>有些时候，Redis实例需要装载大量用户在短时间内产生的数据，数以百万计的keys需要被快速的创建。</p>
+
+<p>我们称之为<em>大量数据插入(mass insertion)</em>,本文档的目标就是提供如下信息：Redis如何尽可能快的处理数据。</p>
+
+<h2 id="使用luke协议">使用Luke协议</h2>
+
+<p>使用正常模式的Redis 客户端执行大量数据插入不是一个好主意：因为一个个的插入会有大量的时间浪费在每一个命令往返时间上。使用管道（pipelining）是一种可行的办法，但是在大量插入数据的同时又需要执行其他新命令时，这时读取数据的同时需要确保请可能快的的写入数据。</p>
+
+<p>只有一小部分的客户端支持非阻塞输入/输出(non-blocking I/O),并且并不是所有客户端能以最大限度的提高吞吐量的高效的方式来分析答复。</p>
+
+<p>例如，如果我们需要生成一个10亿的`keyN -&gt; ValueN’的大数据集，我们会创建一个如下的redis命令集的文件：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SET Key0 Value0
+SET Key1 Value1
+...
+SET KeyN ValueN
+</code></pre></div></div>
+
+<p>一旦创建了这个文件，其余的就是让Redis尽可能快的执行。在以前我们会用如下的<code class="language-plaintext highlighter-rouge">netcat</code>命令执行：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(cat data.txt; sleep 10) | nc localhost 6379 &gt; /dev/null
+</code></pre></div></div>
+
+<p>然而这并不是一个非常可靠的方式，因为用netcat进行大规模插入时不能检查错误。从Redis 2.6开始<code class="language-plaintext highlighter-rouge">redis-cli</code>支持一种新的被称之为<strong>pipe mode</strong>的新模式用于执行大量数据插入工作。</p>
+
+<p>使用<strong>pipe mode</strong>模式的执行命令如下：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cat data.txt | redis-cli --pipe
+</code></pre></div></div>
+
+<p>这将产生类似如下的输出：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>All data transferred. Waiting for the last reply...
+Last reply received from server.
+errors: 0, replies: 1000000
+</code></pre></div></div>
+
+<p>使用redis-cli将有效的确保错误输出到Redis实例的标准输出里面。</p>
+
+<h2 id="生成redis协议">生成Redis协议</h2>
+<p>它会非常简单的生成和解析Redis协议，Redis协议文档请参考<a href="/topics/protocol.html">Redis协议说明</a>。
+但是为了生成大量数据插入的目标，你需要了解每一个细节协议，每个命令会用如下方式表示：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>*&lt;args&gt;&lt;cr&gt;&lt;lf&gt;
+$&lt;len&gt;&lt;cr&gt;&lt;lf&gt;
+&lt;arg0&gt;&lt;cr&gt;&lt;lf&gt;
+&lt;arg1&gt;&lt;cr&gt;&lt;lf&gt;
+...
+&lt;argN&gt;&lt;cr&gt;&lt;lf&gt;
+</code></pre></div></div>
+
+<p>这里的<code class="language-plaintext highlighter-rouge">&lt;cr&gt;</code>是”\r”（或者是ASCII的13）、<code class="language-plaintext highlighter-rouge">&lt;lf&gt;</code>是”\n”（或者是ASCII的10）。</p>
+
+<p>例如：命令<strong>SET key value</strong>协议格式如下：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>*3&lt;cr&gt;&lt;lf&gt;
+$3&lt;cr&gt;&lt;lf&gt;
+SET&lt;cr&gt;&lt;lf&gt;
+$3&lt;cr&gt;&lt;lf&gt;
+key&lt;cr&gt;&lt;lf&gt;
+$5&lt;cr&gt;&lt;lf&gt;
+value&lt;cr&gt;&lt;lf&gt;
+</code></pre></div></div>
+
+<p>或表示为引用字符串：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"*3\r\n$3\r\nSET\r\n$3\r\nkey\r\n$5\r\nvalue\r\n"
+</code></pre></div></div>
+
+<p>你需要将大量插入数据的命令按照上面的方式一个接一个的生成到文件。</p>
+
+<p>下面是使用Ruby生成协议的参考：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def gen_redis_proto(*cmd)
+    proto = ""
+    proto &lt;&lt; "*"+cmd.length.to_s+"\r\n"
+    cmd.each{|arg|
+        proto &lt;&lt; "$"+arg.to_s.bytesize.to_s+"\r\n"
+        proto &lt;&lt; arg.to_s+"\r\n"
+    }
+    proto
+end
+
+puts gen_redis_proto("SET","mykey","Hello World!").inspect
+</code></pre></div></div>
+
+<p>针对上面的例子，使用下面代码可以很容易的生成需要的文件：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(0...1000).each{|n|
+    STDOUT.write(gen_redis_proto("SET","Key#{n}","Value#{n}"))
+}
+</code></pre></div></div>
+
+<p>我们可以直接用 redis-cli 的 pipe执行我们的第一个大量数据插入命令，过程如下：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ruby proto.rb | redis-cli --pipe
+All data transferred. Waiting for the last reply...
+Last reply received from server.
+errors: 0, replies: 1000
+</code></pre></div></div>
+
+<h2 id="pipe-mode的工作原理是什么">pipe mode的工作原理是什么？</h2>
+
+<p>难点是保证redis-cli在pipe mode模式下执行和netcat一样快的同时，如何能理解服务器发送的最后一个回复。</p>
+
+<p>这是通过以下方式获得：</p>
+
+<ul>
+  <li>redis-cli –pipe试着尽可能快的发送数据到服务器。</li>
+  <li>读取数据的同时，解析它。</li>
+  <li>一旦没有更多的数据输入，它就会发送一个特殊的<strong>ECHO</strong>命令，后面跟着20个随机的字符。我们相信可以通过匹配回复相同的20个字符是同一个命令的行为。</li>
+  <li>一旦这个特殊命令发出，收到的答复就开始匹配这20个字符，当匹配时，就可以成功退出了。</li>
+</ul>
+
+<p>同时，在分析回复的时候，我们会采用计数器的方法计数，以便在最后能够告诉我们大量插入数据的数据量。</p>
+
+
+	</article>
+	
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=861", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

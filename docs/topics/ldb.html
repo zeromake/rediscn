@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>REDIS idb -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<h1 id="redis-lua-scripts-debugger">Redis Lua scripts debugger</h1>
+
+<p>Starting with version 3.2 Redis includes a complete Lua debugger, that can be
+used in order to make the task of writing complex Redis scripts much simpler.</p>
+
+<p>Because Redis 3.2 is still in beta, please download the <code class="language-plaintext highlighter-rouge">unstable</code> branch of Redis from Github and compile it in order to test the debugger. You can use Redis unstable in order to debug your scripts that you’ll later run in a stable version of Redis, so the debugger is already usable in practical terms.</p>
+
+<p>The Redis Lua debugger, codename LDB, has the following important features:</p>
+
+<ul>
+  <li>It uses a server-client model, so it’s a remote debugger. The Redis server acts as the debugging server, while the default client is <code class="language-plaintext highlighter-rouge">redis-cli</code>. However other clients can be developed by following the simple protocol implemented by the server.</li>
+  <li>By default every new debugging session is a forked session. It means that while the Redis Lua script is being debugged, the server does not block and is usable for development or in order to execute multiple debugging sessions in parallel. This also means that changes are <strong>rolled back</strong> after the script debugging session finished, so that’s possible to restart a new debugging session again, using exactly the same Redis data set as the previous debugging session.</li>
+  <li>An alternative synchronous (non forked) debugging model is available on demand, so that changes to the dataset can be retained. In this mode the server blocks for the time the debugging session is active.</li>
+  <li>Support for step by step execution.</li>
+  <li>Support for static and dynamic breakpoints.</li>
+  <li>Support from logging the debugged script into the debugger console.</li>
+  <li>Inspection of Lua variables.</li>
+  <li>Tracing of Redis commands executed by the script.</li>
+  <li>Pretty printing of Redis and Lua values.</li>
+  <li>Infinite loops and long execution detection, which simulates a breakpoint.</li>
+</ul>
+
+<h2 id="quick-start">Quick start</h2>
+
+<p>A simple way to get started with the Lua debugger is to watch this video
+introduction:</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/IMvRfStaoyM" frameborder="0" allowfullscreen=""></iframe>
+
+<p><strong>Important note:</strong> please make sure to avoid debugging Lua scripts using your Redis production server. Use a development server instead. Also note that using the synchronous debugging mode (which is NOT the default) results into the Redis server blocking for all the time the debugging session lasts.</p>
+
+<p>To start a new debugging session using <code class="language-plaintext highlighter-rouge">redis-cli</code> do the following steps:</p>
+
+<ol>
+  <li>Create your script in some file with your preferred editor. Let’s assume you are editing your Redis Lua script located at <code class="language-plaintext highlighter-rouge">/tmp/script.lua</code>.</li>
+  <li>
+    <p>Start a debugging session with:</p>
+
+    <p>./redis-cli –ldb –eval /tmp/script.lua</p>
+  </li>
+</ol>
+
+<p>Note that with the <code class="language-plaintext highlighter-rouge">--eval</code> option of <code class="language-plaintext highlighter-rouge">redis-cli</code> you can pass key names and arguments to the script, separated by a comma, like in the following example:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./redis-cli --ldb --eval /tmp/script.lua mykey somekey , arg1 arg2
+</code></pre></div></div>
+
+<p>You’ll enter a special mode where <code class="language-plaintext highlighter-rouge">redis-cli</code> no longer accepts its normal
+commands, but instead prints an help screen and passes the unmodified debugging
+commands directly to Redis.</p>
+
+<p>The only commands which are not passed to the Redis debugger are:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">quit</code> – this will terminate the debugging session. It’s like removing all the breakpoints and using the <code class="language-plaintext highlighter-rouge">continue</code> debugging command. Moreover the command will exit from <code class="language-plaintext highlighter-rouge">redis-cli</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">restart</code> – the debugging session will restart from scratch, <strong>reloading the new version of the script from the file</strong>. So a normal debugging cycle involves modifying the script after some debugging, and calling <code class="language-plaintext highlighter-rouge">restart</code> in order to start debugging again with the new script changes.</li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">help</code> – this command is passed to the Redis Lua debugger, that will print a list of commands like the following:</p>
+
+    <p>lua debugger&gt; help
+  Redis Lua debugger help:
+  [h]elp               Show this help.
+  [s]tep               Run current line and stop again.
+  [n]ext               Alias for step.
+  [c]continue          Run till next breakpoint.
+  [l]list              List source code around current line.
+  [l]list [line]       List source code around [line].
+                       line = 0 means: current position.
+  [l]list [line] [ctx] In this form [ctx] specifies how many lines
+                       to show before/after [line].
+  [w]hole              List all source code. Alias for ‘list 1 1000000’.
+  [p]rint              Show all the local variables.
+  [p]rint <var>        Show the value of the specified variable.
+                       Can also show global vars KEYS and ARGV.
+  [b]reak              Show all breakpoints.
+  [b]reak <line>       Add a breakpoint to the specified line.
+  [b]reak -<line>      Remove breakpoint from the specified line.
+  [b]reak 0            Remove all breakpoints.
+  [t]race              Show a backtrace.
+  [e]eval <code>       Execute some Lua code (in a different callframe).
+  [r]edis <cmd>        Execute a Redis command.
+  [m]axlen [len]       Trim logged Redis replies and Lua var dumps to len.
+                       Specifying zero as <len> means unlimited.
+  [a]abort             Stop the execution of the script. In sync
+                       mode dataset changes will be retained.</len></cmd></code></line></line></var></p>
+
+    <p>Debugger functions you can call from Lua scripts:
+  redis.debug()        Produce logs in the debugger console.
+  redis.breakpoint()   Stop execution as if there was a breakpoint in the
+                       next line of code.</p>
+  </li>
+</ul>
+
+<p>Note that when you start the debugger it will start in <strong>stepping mode</strong>. It will stop at the first line of the script that actually does something before executing it.</p>
+
+<p>From this point you usually call <code class="language-plaintext highlighter-rouge">step</code> in order to execute the line and go to the next line. While you step Redis will show all the commands executed by the server like in the following example:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>* Stopped at 1, stop reason = step over
+-&gt; 1   redis.call('ping')
+lua debugger&gt; step
+&lt;redis&gt; ping
+&lt;reply&gt; "+PONG"
+* Stopped at 2, stop reason = step over
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">&lt;redis&gt;</code> and <code class="language-plaintext highlighter-rouge">&lt;reply&gt;</code> lines show the command executed by the line just
+executed, and the reply from the server. Note that this happens only in stepping mode. If you use <code class="language-plaintext highlighter-rouge">continue</code> in order to execute the script till the next breakpoint, commands will not be dumped on the screen to prevent too much output.</p>
+
+<h2 id="termination-of-the-debugging-session">Termination of the debugging session</h2>
+
+<p>When the scripts terminates naturally, the debugging session ends and
+<code class="language-plaintext highlighter-rouge">redis-cli</code> returns in its normal non-debugging mode. You can restart the
+session using the <code class="language-plaintext highlighter-rouge">restart</code> command as usually.</p>
+
+<p>Another way to stop a debugging session is just interrupting <code class="language-plaintext highlighter-rouge">redis-cli</code>
+manually by pressing <code class="language-plaintext highlighter-rouge">Ctrl+C</code>. Note that also any event breaking the
+connection between <code class="language-plaintext highlighter-rouge">redis-cli</code> and the <code class="language-plaintext highlighter-rouge">redis-server</code> will interrupt the
+debugging session.</p>
+
+<p>All the forked debugging sessions are terminated when the server is shut
+down.</p>
+
+<h2 id="abbreviating-debugging-commands">Abbreviating debugging commands</h2>
+
+<p>Debugging can be a very repetitive task. For this reason every Redis
+debugger command starts with a different character, and you can use the single
+initial character in order to refer to the command.</p>
+
+<p>So for example instead of typing <code class="language-plaintext highlighter-rouge">step</code> you can just type <code class="language-plaintext highlighter-rouge">s</code>.</p>
+
+<h2 id="breakpoints">Breakpoints</h2>
+
+<p>Adding and removing breakpoints is trivial as described in the online help.
+Just use <code class="language-plaintext highlighter-rouge">b 1 2 3 4</code> to add a breakpoint in line 1, 2, 3, 4.
+The command <code class="language-plaintext highlighter-rouge">b 0</code> removes all the breakpoints. Selected breakpoints can be
+removed using as argument the line where the breakpoint we want to remove is, but prefixed by a minus sign. So for example <code class="language-plaintext highlighter-rouge">b -3</code> removes the breakpoint from line 3.</p>
+
+<p>Note that adding breakpoints to lines that Lua never executes, like declaration of local variables or comments, will not work. The breakpoint will be added but since this part of the script will never be executed, the program will never stop.</p>
+
+<h2 id="dynamic-breakpoints">Dynamic breakpoints</h2>
+
+<p>Using the <code class="language-plaintext highlighter-rouge">breakpoint</code> command it is possible to add breakpoints into specific
+lines. However sometimes we want to stop the execution of the program only
+when something special happens. In order to do so, you can use the
+<code class="language-plaintext highlighter-rouge">redis.breakpoint()</code> function inside your Lua script. When called it simulates
+a breakpoint in the next line that will be executed.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if counter &gt; 10 then redis.breakpoint() end
+</code></pre></div></div>
+
+<p>This feature is extremely useful when debugging, so that we can avoid to
+continue the script execution manually multiple times until a given condition
+is encountered.</p>
+
+<h2 id="synchronous-mode">Synchronous mode</h2>
+
+<p>As explained previously, but default LDB uses forked sessions with rollback
+of all the data changes operated by the script while it has being debugged.
+Determinism is usually a good thing to have during debugging, so that successive
+debugging sessions can be started without having to reset the database content
+to its original state.</p>
+
+<p>However for tracking certain bugs, you may want to retain the changes performed
+to the key space by each debugging session. When this is a good idea you
+should start the debugger using a special option, <code class="language-plaintext highlighter-rouge">ldb-sync-mode</code>, in <code class="language-plaintext highlighter-rouge">redis-cli</code>.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./redis-cli --ldb-sync-mode --eval /tmp/script.lua
+</code></pre></div></div>
+
+<p><strong>Note that the Redis server will be unreachable during the debugging session in this mode</strong>, so use with care.</p>
+
+<p>In this special mode, the <code class="language-plaintext highlighter-rouge">abort</code> command can stop the script half-way taking the changes operated to the dataset. Note that this is different compared to ending the debugging session normally. If you just interrupt <code class="language-plaintext highlighter-rouge">redis-cli</code> the script will be fully executed and then the session terminated. Instead with <code class="language-plaintext highlighter-rouge">abort</code> you can interrupt the script execution in the middle and start a new debugging session if needed.</p>
+
+<h2 id="logging-from-scripts">Logging from scripts</h2>
+
+<p>The <code class="language-plaintext highlighter-rouge">redis.debug()</code> command is a powerful debugging facility that can be
+called inside the Redis Lua script in order to log things into the debug
+console:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lua debugger&gt; list
+-&gt; 1   local a = {1,2,3}
+   2   local b = false
+   3   redis.debug(a,b)
+lua debugger&gt; continue
+&lt;debug&gt; line 3: {1; 2; 3}, false
+</code></pre></div></div>
+
+<p>If the script is executed outside of a debugging session, <code class="language-plaintext highlighter-rouge">redis.debug()</code> has no effects at all. Note that the function accepts multiple arguments, that are separated by a comma and a space in the output.</p>
+
+<p>Tables and nested tables are displayed correctly in order to make values simple to observe for the programmer debugging the script.</p>
+
+<h2 id="inspecting-the-program-state-with-print-and-eval">Inspecting the program state with <code class="language-plaintext highlighter-rouge">print</code> and <code class="language-plaintext highlighter-rouge">eval</code></h2>
+
+<p>While the <code class="language-plaintext highlighter-rouge">redis.debug()</code> function can be used in order to print values
+directly from within the Lua script, often it is useful to observe the local
+variables of a program while stepping or when stopped into a breakpoint.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">print</code> command does just that, and performs lookup in the call frames
+starting from the current one back to the previous ones, up to top-level.
+This means that even if we are into a nested function inside a Lua script,
+we can still use <code class="language-plaintext highlighter-rouge">print foo</code> to look at the value of <code class="language-plaintext highlighter-rouge">foo</code> in the context
+of the calling function. When called without a variable name, <code class="language-plaintext highlighter-rouge">print</code> will
+print all variables and their respective values.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">eval</code> command executes small pieces of Lua scripts <strong>outside the context of the current call frame</strong> (evaluating inside the context of the current call frame is not possible with the current Lua internals). However you can use this command in order to test Lua functions.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lua debugger&gt; e redis.sha1hex('foo')
+&lt;retval&gt; "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33"
+</code></pre></div></div>
+
+<h2 id="debugging-clients">Debugging clients</h2>
+
+<p>LDB uses the client-server model where the Redis servers acts as a debugging server that communicates using <a href="/topics/protocol">RESP</a>. While <code class="language-plaintext highlighter-rouge">redis-cli</code> is the default debug client, any <a href="/clients">client</a> can be used for debugging as long as it meets one of the following conditions:</p>
+
+<ol>
+  <li>The client provides a native interface for setting the debug mode and controlling the debug session.</li>
+  <li>The client provides an interface for sending arbitrary commands over RESP.</li>
+  <li>The client allows sending raw messages to the Redis server.</li>
+</ol>
+
+<p>For example, the <a href="https://redislabs.com/blog/zerobrane-studio-plugin-for-redis-lua-scripts">Redis plugin</a> for <a href="http://studio.zerobrane.com/">ZeroBrane Studio</a> integrates with LDB using <a href="https://github.com/nrk/redis-lua">redis-lua</a>. The following Lua code is a simplified example of how the plugin achieves that:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>local redis = require 'redis'
+
+-- add LDB's Continue command
+redis.commands['ldbcontinue'] = redis.command('C')
+
+-- script to be debugged
+local script = [[
+  local x, y = tonumber(ARGV[1]), tonumber(ARGV[2])
+  local result = x * y
+  return result
+]]
+
+local client = redis.connect('127.0.0.1', 6379)
+client:script("DEBUG", "YES")
+print(unpack(client:eval(script, 0, 6, 9)))
+client:ldbcontinue()
+</code></pre></div></div>
+
+
+	</article>
+	
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=1459", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

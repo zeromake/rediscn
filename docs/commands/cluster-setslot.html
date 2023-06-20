@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>cluster-setslot 命令 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+
+<div class='text'>
+          <h1 class='command'>
+            <span class='name'></span>
+            <span class='arg'></span>
+          </h1>
+          <article>
+            <div class='article-main'>
+              <div class='metadata'>
+              </div>
+              <p><code class="language-plaintext highlighter-rouge">CLUSTER SETSLOT</code> 根据如下子命令选项，修改接受节点中哈希槽的状态：</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">MIGRATING</code> 子命令：将一个哈希槽设置为<em>migrating</em> 状态</li>
+</ol>
+
+<p>. <code class="language-plaintext highlighter-rouge">IMPORTING</code> 子命令：将一个哈希槽设置为<em>importing</em> 状态</p>
+
+<ol>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">STABLE</code> 子命令：从哈希槽中清除导入和迁移状态</p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">NODE</code> 子命令：将一个哈希槽绑定到另一个不同的节点</p>
+  </li>
+</ol>
+
+<p>该命令和子命令选项可以用来启动和结束一个群集重新哈希槽的操作，操作期间备操作哈希槽会在源节点被设置为迁移中状态，目标节点设置为导入中状态
+每个子命令详细如下，文章末尾会有使用该命令以及其他相关命令实现实时重新哈希操作的说明。</p>
+
+<h2 id="cluster-setslot-slot-migrating-destination-node-id">CLUSTER SETSLOT <code class="language-plaintext highlighter-rouge">&lt;slot&gt;</code> MIGRATING <code class="language-plaintext highlighter-rouge">&lt;destination-node-id&gt;</code></h2>
+
+<p>该子命令将一个槽设置为<em>migrating</em>状态.为了可以将一个哈希槽设置成这种状态，收到命令的节点必须是该哈希槽的所有者，否则报错</p>
+
+<p>当一个哈希槽被设置为migrating状态，节点将会有如下操作：</p>
+
+<ol>
+  <li>
+    <p>如果处理的是存在的key，命令正常执行</p>
+  </li>
+  <li>
+    <p>如果要处理的key不存在，接收命令的节点将发出一个重定向<code class="language-plaintext highlighter-rouge">ASK</code>，让客户端紧在<code class="language-plaintext highlighter-rouge">destination-node</code>重试该查询. 在这种情况下，客户端不应该将该哈希槽更新为节点映射.</p>
+  </li>
+  <li>
+    <p>如果命令包含多个keys，如果都不存在，处理方式同2，如果都存在，处理方式同1，如果只是部分存在，针对即将完成迁移至目标节点的keys按序返回<code class="language-plaintext highlighter-rouge">TRYAGAIN</code>错误，以便批量keys命令可以执行。</p>
+  </li>
+</ol>
+
+<h2 id="cluster-setslot-slot-importing-source-node-id">CLUSTER SETSLOT <code class="language-plaintext highlighter-rouge">&lt;slot&gt;</code> IMPORTING <code class="language-plaintext highlighter-rouge">&lt;source-node-id&gt;</code></h2>
+
+<p>该子命令是<code class="language-plaintext highlighter-rouge">MIGRATING</code>的反向操作，将keys从指定源节点导入目标节点。该命令仅能在目标节点不是指定槽的所有者时生效。</p>
+
+<p>当一个槽被设置为导入中状态时，该节点的变动情况如下</p>
+
+<ol>
+  <li>
+    <p>涉及该哈希槽的命令均被拒绝，并产生一个<code class="language-plaintext highlighter-rouge">MOVED</code> 重定向，但是如果该命令跟着一个<code class="language-plaintext highlighter-rouge">ASKING</code>命令，在这种情况下，表示该命令已经执行。
+当迁移中的节点产生<code class="language-plaintext highlighter-rouge">ASK</code>重定向时，客户端会连接目标节点，在发送命令后紧接着发送<code class="language-plaintext highlighter-rouge">ASKING</code>。按照这种策略，涉及源节点已不存在的keys或者已经迁移至目标节点的keys的命令，都在目标节点执行。说明如下：</p>
+  </li>
+  <li>
+    <p>新的keys总是在目标节点创建。在哈希槽的迁移中，我们只迁移旧keys不会创建新建的keys</p>
+  </li>
+  <li>
+    <p>涉及已经迁移的keys的命令都会被目的节点处理，目的节点会是新的哈希槽的所有者，以保证一致性。</p>
+  </li>
+  <li>
+    <p>如果没有<code class="language-plaintext highlighter-rouge">ASKING</code>，命令没什么特殊，<code class="language-plaintext highlighter-rouge">ASKING</code>保证哈希槽映射关系错误的客户端不会再目的节点操作错误：在还没完成迁移的key创建一个新的版本。</p>
+  </li>
+</ol>
+
+<h2 id="cluster-setslot-slot-stable">CLUSTER SETSLOT <code class="language-plaintext highlighter-rouge">&lt;slot&gt;</code> STABLE</h2>
+
+<p>该子命令仅用于清理槽中迁移中/导入中的状态。它主要用于修复群集在使用·redis-trip fix· 卡在一个错误状态的问题。
+一般情况下，使用下节介绍的命令<code class="language-plaintext highlighter-rouge">SETSLOT... NODE...</code>迁移完成时，这两种状态会被自动清理。</p>
+
+<h2 id="cluster-setslot-slot-node-node-id">CLUSTER SETSLOT <code class="language-plaintext highlighter-rouge">&lt;slot&gt;</code> NODE <code class="language-plaintext highlighter-rouge">&lt;node-id&gt;</code></h2>
+
+<p>子命令<code class="language-plaintext highlighter-rouge">NODE</code>使用方法最复杂，它后接指定节点的哈希槽，该命令仅在特定情况下有效，并且不同的槽状态会有不同的效果，前提条件和对应的效果如下：</p>
+
+<ol>
+  <li>
+    <p>如果接受命令的节点是当前操作哈希槽的所有者，但是该命令的操作结果是将操作的槽分配到另一个节点，因此，要操作的哈希槽中还有keys，该命令会返回错误。</p>
+  </li>
+  <li>
+    <p>如果槽是<code class="language-plaintext highlighter-rouge">migrating</code>状态，当该槽被分配至其他节点时，状态被清除。</p>
+  </li>
+  <li>
+    <p>如果槽在接收命令的节点上是<code class="language-plaintext highlighter-rouge">importing</code>状态，该命令将槽分配给这个节点(当进行重哈希时，最终结果哈希槽从一个节点迁移至目的节点)并做如下操作：
+A) 状态<code class="language-plaintext highlighter-rouge">importing</code>被清除
+B) 如果该节点的配置epoch不是群集中最大的，它将生成一个新的配置epoch。这样，在经历过故障转移或者槽迁移的群集中，能够拿到新的哈希槽的所有权。</p>
+  </li>
+</ol>
+
+<p>特别注意:步骤3是群集中一个节点不和其他节点协商独自产生一个新配置epoch的唯一情况，且仅在人工配置时发生。不过因为群集使用了配置epoch碰撞解决算法，该步骤
+不可能在两个节点的epoch相同的情况下完成群集安装。</p>
+
+<h2 id="返回值">返回值</h2>
+
+<p><a href="/topics/protocol.html#simple-string-reply">simple-string-reply</a>: 所有子命令执行成功时都返回<code class="language-plaintext highlighter-rouge">OK</code>，否则返回错误</p>
+
+<h2 id="redis-cluster-live-resharding-explained">Redis Cluster live resharding explained</h2>
+
+<p>Redis 群集使用命令 <code class="language-plaintext highlighter-rouge">CLUSTER SETSLOT</code> 将一个槽中的所有keys 从一个节点迁移至另一个节点。稍后介绍在其他命令配合下迁移是如何操作的。
+我们假定要操作的哈希槽的当前所有者为源节点，将要迁移至的节点为目的节点</p>
+
+<ol>
+  <li>
+    <p>使用命令<code class="language-plaintext highlighter-rouge">CLUSTER SETSLOT &lt;slot&gt; IMPORTING &lt;source-node-id&gt;</code> 将目的节点槽置为<em>importing</em>状态。</p>
+  </li>
+  <li>
+    <p>使用命令<code class="language-plaintext highlighter-rouge">CLUSTER SETSLOT &lt;slot&gt; MIGRATING &lt;destination-node-id&gt;</code> 将源节点槽置为<em>migrating</em>状态。</p>
+  </li>
+  <li>
+    <p>使用命令<code class="language-plaintext highlighter-rouge">CLUSTER GETKEYSINSLOT</code> 从源节点获取所有keys，并使用命令<code class="language-plaintext highlighter-rouge">MIGRATE</code> 将它们导入到目的节点。</p>
+  </li>
+  <li>
+    <p>在源节点活目的节点执行命令<code class="language-plaintext highlighter-rouge">CLUSTER SETSLOT &lt;slot&gt; NODE &lt;destination-node-id&gt;</code></p>
+  </li>
+</ol>
+
+<p>注意：</p>
+
+<ul>
+  <li>
+    <p>步骤1和步骤2的顺序很重要。我们希望在源节点配置了重定向之后，目的节点已经可以接受<code class="language-plaintext highlighter-rouge">ASK</code>重定向。</p>
+  </li>
+  <li>
+    <p>步骤4中，技术上讲，在重哈希不涉及的节点上执行<code class="language-plaintext highlighter-rouge">SETSLOT</code>是非必须的，因为新配置最终会分发到所有节点上，但是，这样操作也有好处，会快速停止节点中对已迁移的哈希槽的错误指向，降低命令重定向的发生.</p>
+  </li>
+</ul>
+
+            </div>
+			<div class='article-aside'>
+              <aside>
+                <h2>
+                  相关命令
+                </h2>
+                <ul>
+                  <li>
+                    <a href='/commands/cluster-addslots.html'>
+                      CLUSTER ADDSLOTS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-count-failure-reports.html'>
+                      CLUSTER COUNT-FAILURE-REPORTS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-countkeysinslot.html'>
+                      CLUSTER COUNTKEYSINSLOT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-delslots.html'>
+                      CLUSTER DELSLOTS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-failover.html'>
+                      CLUSTER FAILOVER
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-forget.html'>
+                      CLUSTER FORGET
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-getkeysinslot.html'>
+                      CLUSTER GETKEYSINSLOT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-info.html'>
+                      CLUSTER INFO
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-keyslot.html'>
+                      CLUSTER KEYSLOT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-meet.html'>
+                      CLUSTER MEET
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-nodes.html'>
+                      CLUSTER NODES
+                    </a>
+                  </li>
+				  <li>
+                    <a href='/commands/cluster-replicas.html'>
+                      CLUSTER REPLICAS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-replicate.html'>
+                      CLUSTER REPLICATE
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-reset.html'>
+                      CLUSTER RESET
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-saveconfig.html'>
+                      CLUSTER SAVECONFIG
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-set-config-epoch.html'>
+                      CLUSTER SET-CONFIG-EPOCH
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-setslot.html'>
+                      CLUSTER SETSLOT
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-slaves.html'>
+                      CLUSTER SLAVES
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/cluster-slots.html'>
+                      CLUSTER SLOTS
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/readonly.html'>
+                      READONLY
+                    </a>
+                  </li>
+                  <li>
+                    <a href='/commands/readwrite.html'>
+                      READWRITE
+                    </a>
+                  </li>
+                </ul>
+              </aside>
+            </div>
+            </article>
+            
+</div>
+<script>
+		if(isRediscnPc()){
+			var s = "_" + Math.random().toString(36).slice(2);
+			document.write('<div style="margin-bottom:10px;" id="' + s + '"></div>');
+			(window.slotbydup = window.slotbydup || []).push({
+				id: "u3556359",
+				container:  s
+			});
+			document.write('<scr'+'ipt type="text/javascr'+'ipt" src="//cpro.baidustatic.com/cpro/ui/c.js" async="async" defer="defer" ></scr'+'ipt>');
+		}
+	
+</script>
+	
+
+<div id='disqus_thread' style="border:1px solid #CDCDCD;background-color:#CDCDCD;"></div>
+      <script type='text/javascript'>
+      $(document).ready(function(){ 
+      		$.get("http://bbs.redis.cn/forum.php?mod=viewthread1&tid=932", function(result){
+				    $("#disqus_thread").html(result);
+				  });
+      });
+      </script>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>
+
+<script src='/js/commands.js?1426205833'></script>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>延迟考虑 - Redis开发运维实践指南 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<h4 id="1-尽可能使用批量操作">1. 尽可能使用批量操作：</h4>
+
+<ul>
+  <li>
+    <p>mget、hmget而不是get和hget，对于set也是如此。</p>
+  </li>
+  <li>
+    <p>lpush向一个list一次性导入多个元素，而不用lset一个个添加</p>
+  </li>
+  <li>
+    <p>LRANGE 一次取出一个范围的元素，也不用LINDEX一个个取出</p>
+  </li>
+</ul>
+
+<h4 id="2-尽可能的把redis和app-server部署在一个网段甚至一台机器">2. 尽可能的把redis和APP SERVER部署在一个网段甚至一台机器。</h4>
+
+<h4 id="3-对于数据量较大的集合不要轻易进行删除操作这样会阻塞服务器一般采用重命名批量删除的策略">3. 对于数据量较大的集合，不要轻易进行删除操作，这样会阻塞服务器，一般采用重命名+批量删除的策略：</h4>
+
+<p>排序集合：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Rename the key
+newkey = "gc:hashes:" + redis.INCR("gc:index")
+redis.RENAME("my.zset.key", newkey)
+
+# Delete members from the sorted set in batche of 100s
+while redis.ZCARD(newkey) &gt; 0
+  redis.ZREMRANGEBYRANK(newkey, 0, 99)
+end
+</code></pre></div></div>
+
+<p>集合：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Rename the key
+newkey = "gc:hashes:" + redis.INCR("gc:index")
+redis.RENAME("my.set.key", newkey)
+
+# Delete members from the set in batches of 100
+cursor = 0
+loop
+  cursor, members = redis.SSCAN(newkey, cursor, "COUNT", 100)
+  if size of members &gt; 0
+redis.SREM(newkey, members)
+  end
+  if cursor == 0
+break
+  end
+end
+</code></pre></div></div>
+
+<p>列表：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Rename the key
+newkey = "gc:hashes:" + redis.INCR("gc:index")
+redis.RENAME("my.list.key", newkey)
+
+# Trim off elements in batche of 100s
+while redis.LLEN(newkey) &gt; 0
+  redis.LTRIM(newkey, 0, -99)
+end
+</code></pre></div></div>
+
+<p>Hash：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Rename the key
+newkey = "gc:hashes:" + redis.INCR( "gc:index" )
+redis.RENAME("my.hash.key", newkey)
+
+# Delete fields from the hash in batche of 100s
+cursor = 0
+loop
+  cursor, hash_keys = redis.HSCAN(newkey, cursor, "COUNT", 100)
+  if hash_keys count &gt; 0
+redis.HDEL(newkey, hash_keys)
+  end
+  if cursor == 0
+break
+  end
+end
+</code></pre></div></div>
+
+<h4 id="4-尽可能使用不要超过1m大小的kv">4. 尽可能使用不要超过1M大小的kv。</h4>
+
+<h4 id="5-减少对大数据集的高时间复杂度的操作根据复杂度计算如下命令可以优化">5. 减少对大数据集的高时间复杂度的操作：根据复杂度计算，如下命令可以优化:</h4>
+
+<p><img src="https://raw.githubusercontent.com/gnuhpc/All-About-Redis/master/CodeDesignRule/lat1.png" alt="" /></p>
+
+<h4 id="6-尽可能使用pipeline操作一次性的发送命令比一个个发要减少网络延迟和单个处理开销一个性能测试结果为注意并不是pipeline越大效率越高注意最后一个测试结果-">6. 尽可能使用pipeline操作：一次性的发送命令比一个个发要减少网络延迟和单个处理开销。一个性能测试结果为（注意并不是pipeline越大效率越高，注意最后一个测试结果） :</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logger@BIGD1TMP:~&gt; redis-benchmark -q -r 100000 -n 1000000 -c 50 
+PING_INLINE: 90155.07 requests per second
+PING_BULK: 92302.02 requests per second
+SET: 85070.18 requests per second
+GET: 86184.61 requests per second
+
+logger@BIGD1TMP:~&gt; redis-benchmark -q -r 100000 -n 1000000 -c 50 -P 10
+PING_INLINE: 558035.69 requests per second
+PING_BULK: 668002.69 requests per second
+SET: 275027.50 requests per second
+GET: 376647.84 requests per second
+
+logger@BIGD1TMP:~&gt; redis-benchmark -q -r 100000 -n 1000000 -c 50 -P 20
+PING_INLINE: 705716.25 requests per second
+PING_BULK: 869565.25 requests per second
+SET: 343406.59 requests per second
+GET: 459347.72 requests per second
+
+logger@BIGD1TMP:~&gt; redis-benchmark -q -r 100000 -n 1000000 -c 50 -P 50
+PING_INLINE: 940733.81 requests per second
+PING_BULK: 1317523.00 requests per second
+SET: 380807.31 requests per second
+GET: 523834.47 requests per second
+
+logger@BIGD1TMP:~&gt; redis-benchmark -q -r 100000 -n 1000000 -c 50 -P 100
+PING_INLINE: 999000.94 requests per second
+PING_BULK: 1440922.12 requests per second
+SET: 386996.88 requests per second
+GET: 602046.94 requests per second
+
+logger@BIGD1TMP:~&gt; redis-benchmark -q -r 100000 -n 1000000 -c 50 -P 200
+PING_INLINE: 1078748.62 requests per second
+PING_BULK: 1381215.50 requests per second
+SET: 379218.81 requests per second
+GET: 537634.38 requests per second
+</code></pre></div></div>
+
+<p>一个场景是一个购物车的设计，一般的设计思路是： <img src="https://raw.githubusercontent.com/gnuhpc/All-About-Redis/master/CodeDesignRule/lat2.png" alt="" />在获取购物车内部货品时，不使用pipeline会很低效： <img src="https://raw.githubusercontent.com/gnuhpc/All-About-Redis/master/CodeDesignRule/lat3.png" alt="" />可以修改为： <img src="https://raw.githubusercontent.com/gnuhpc/All-About-Redis/master/CodeDesignRule/lat4.png" alt="" /></p>
+
+<h4 id="7-如果出现频繁对string进行append操作则请使用list进行push操作取出时使用pop这样避免string频繁分配内存导致的延时">7. 如果出现频繁对string进行append操作，则请使用list进行push操作，取出时使用pop。这样避免string频繁分配内存导致的延时。</h4>
+
+<h4 id="8-如果要sort的集合非常大的话排序就会消耗很长时间由于redis单线程的所以长时间的排序操作会阻塞其他client的-请求解决办法是通过主从复制机制将数据复制到多个slave上然后我们只在slave上做排序操作把可能的对排序结果缓存另外就是一个方案是就是采用sorted-set对需要按某个顺序访问的集合建立索引">8. 如果要sort的集合非常大的话排序就会消耗很长时间。由于redis单线程的，所以长时间的排序操作会阻塞其他client的 请求。解决办法是通过主从复制机制将数据复制到多个slave上。然后我们只在slave上做排序操作。把可能的对排序结果缓存。另外就是一个方案是就是采用sorted set对需要按某个顺序访问的集合建立索引。</h4>
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset='utf-8' />
+    <link rel="stylesheet" href="/css/styles.css?1436966512">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href='/images/favicon.png' rel='shortcut icon' />
+    <meta content='width=device-width, minimum-scale=1.0, maximum-scale=1.0' name='viewport' />
+    <title>优酷蓝鲸近千节点的Redis集群运维经验总结 -- Redis中国用户组（CRUG）</title>
+    <meta name="description" content="redis
+">
+		<script src='/js/jquery-2.0.3.min.js?1426205838'></script>
+		<script src='/js/slideout.js?1426205838'></script>
+		<script src='/js/app.js?1436878127'></script>
+		<script src='/js/base.js?1436878127'></script>
+  </head>
+
+<body class=''>
+    <div class='mobile-menu slideout-menu'>
+      <header class='menu-header'></header>
+      <section class='menu-section'>
+        <ul class='menu-section-list'>
+          <li>
+            <a class='home' href='/'>首页</a>
+          </li>
+          <li>
+            <a href='/commands.html'>命令</a>
+          </li>
+          <li>
+            <a href='/clients.html'>客户端</a>
+          </li>
+          <li>
+            <a href='/documentation.html'>文档</a>
+          </li>
+          <li>
+            <a href='/community.html'>社区</a>
+          </li>
+          <li>
+            <a href='/download.html'>下载</a>
+          </li>
+          <li>
+            <a href='/support.html'>支持</a>
+          </li>
+          <li>
+            <a href='/topics/license.html'>许可</a>
+          </li>
+          <li>
+            <a href='/update.html'>更新日志</a>
+          </li>
+          <li>
+            <a href='/articles.html'>文章大全</a>
+          </li>
+		  <li>
+            <a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </li>
+          
+        </ul>
+      </section>
+    </div>
+    <div class='site-wrapper'>
+      <header class='site-header'>
+        <nav class='container'>
+          <div class='mobile-header'>
+            <button class='btn-hamburger js-slideout-toggle'>
+              <span class='fa fa-bars'></span>
+            </button>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+          </div>
+          <div class='desktop-header'>
+            <a class='home' href='/'>
+              <img alt='Redis' src='/images/redis-white.png' />
+            </a>
+            <a href='/commands.html'>命令</a>
+            <a href='/clients.html'>客户端</a>
+            <a href='/documentation.html'>文档</a>
+            <a href='/community.html'>社区</a>
+            <a href='/download.html'>下载</a>
+            <a href='/support.html'>支持</a>
+            <a href='/topics/license.html'>许可</a>
+            <a href='/update.html'>更新日志</a>
+            <a href='/articles.html'>文章大全</a>
+			<a href='http://bbs.redis.cn' target='_blank'>论坛</a>
+          </div>
+        </nav>
+      </header>
+      <header class='site-header' style="background-color: #ffffff;">
+        <!--
+        <nav class='container'>
+        	<a href="https://activity.huaweicloud.com/support_plan/index.html?utm_source=huawei&utm_medium=banner&utm_campaign=armredis&utm_content=0624&utm_term=crug" target="_blank">
+				<img src="/images/bn/huawei_redis_08.png" style="width:100%;"/>
+			</a>
+        </nav>
+      -->
+      </header>
+      <div class='site-content'>
+<div class='text'>
+	<article id='topic'>
+		<p>Redis是时下比较流行的Nosql技术。在优酷我们使用Redis Cluster构建了一套内存存储系统，项目代号蓝鲸。到目前为止集群有700+节点，即将达到作者推荐的最大集群规模1000节点。集群从Redis Cluster发布不久就开始运行，到现在已经将近两年时间。在运维集群过程中遇到了很多问题，记录下来希望对他人有所帮助。</p>
+
+<h2 id="主从重同步问题">主从重同步问题</h2>
+
+<h4 id="问题描述">问题描述</h4>
+
+<p>服务器宕机并恢复后，需要重启Redis实例，因为集群采用主从结构并且宕机时间比较长，此时宕机上的节点对应的节点都是主节点，宕掉的节点重启后都应该是从节点。启动Redis实例，我们通过日志发现节点一直从不断的进行主从同步。我们称这种现象为主从重同步。</p>
+
+<h4 id="主从同步机制">主从同步机制</h4>
+
+<p>为了分析以上问题，我们首先应该搞清楚Redis的主从同步机制。以下是从节点正常的主从同步流程日志：</p>
+
+<p>```17:22:49.763 * MASTER &lt;-&gt; SLAVE sync started<br />
+17:22:49.764 * Non blocking connect for SYNC fired the event.17:22:49.764 * Master replied to PING, replication can continue…17:22:49.764 * Partial resynchronization not possible (no cached master)17:22:49.765 * Full resync from master: c9fabd3812295cc1436af69c73256011673406b9:1745224753247<br />
+17:23:42.223 * MASTER &lt;-&gt; SLAVE sync: receiving 1811656499 bytes from master<br />
+17:24:04.484 * MASTER &lt;-&gt; SLAVE sync: Flushing old data<br />
+17:24:25.646 * MASTER &lt;-&gt; SLAVE sync: Loading DB in memory<br />
+17:27:21.541 * MASTER &lt;-&gt; SLAVE sync: Finished with success<br />
+17:28:22.818 # MASTER timeout: no data nor PING received…17:28:22.818 # Connection with master lost.17:28:22.818 * Caching the disconnected master state.17:28:22.818 * Connecting to MASTER xxx.xxx.xxx.xxx:xxxx<br />
+17:28:22.818 * MASTER &lt;-&gt; SLAVE sync started<br />
+17:28:22.819 * Non blocking connect for SYNC fired the event.17:28:22.824 * Master replied to PING, replication can continue…17:28:22.824 * Trying a partial resynchronization (request c9fabd3812295cc1436af69c73256011673406b9:1745240101942).17:28:22.825 * Successful partial resynchronization with master.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+以上日志是以从节点的视角呈现的，因为以从节点的角度更能反映主从同步流程，所以以下的分析也以从节点的视角为主。日志很清楚的说明了Redis主从同步的流程，主要步骤为：
+
+1.  从节点接收RDB文件
+2.  从节点清空旧数据
+3.  从节点加载RDB文件
+
+到此一次全量主从同步完成。等等日志中“Connection with master lost”是什么鬼，为什么接下来又进行了一次主从同步。
+
+“Connection with master lost”的字面意思是从节点与主节点的连接超时。在Redis中主从节点需要互相感知彼此的状态，这种感知是通过从节点定时PING主节点并且主节点返回PONG消息来实现的。那么当主节点或者从节点因为其他原因不能及时收到PING或者PONG消息时，则认为主从连接已经断开。
+
+问题又来了何为及时，Redis通过参数repl-timeout来设定，它的默认值是60s。Redis配置文件（redis.conf）中详细解释了repl-timeout的含义：
+
+</code></pre></div></div>
+<h1 id="the-following-option-sets-the-replication-timeout-for">The following option sets the replication timeout for:</h1>
+<p>#</p>
+<h1 id="1-bulk-transfer-io-during-sync-from-the-point-of-view-of-slave">1) Bulk transfer I/O during SYNC, from the point of view of slave.</h1>
+<h1 id="2-master-timeout-from-the-point-of-view-of-slaves-data-pings">2) Master timeout from the point of view of slaves (data, pings).</h1>
+<h1 id="3-slave-timeout-from-the-point-of-view-of-masters-replconf-ack-pings">3) Slave timeout from the point of view of masters (REPLCONF ACK pings).</h1>
+<p>#</p>
+<h1 id="it-is-important-to-make-sure-that-this-value-is-greater-than-the-value">It is important to make sure that this value is greater than the value</h1>
+<h1 id="specified-for-repl-ping-slave-period-otherwise-a-timeout-will-be-detected">specified for repl-ping-slave-period otherwise a timeout will be detected</h1>
+<h1 id="every-time-there-is-low-traffic-between-the-master-and-the-slave">every time there is low traffic between the master and the slave.</h1>
+<p>#</p>
+<h1 id="repl-timeout-60">repl-timeout 60</h1>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+我们回过头再来看上边的同步日志，从节点加载RDB文件花费将近三分钟的时间，超过了repl-timeout，所以从节点认为与主节点的连接断开，所以它尝试重新连接并进行主从同步。
+
+#### 部分同步
+
+这里补充一点当进行主从同步的时候Redis都会先尝试进行部分同步，部分同步失败才会尝试进行全量同步。
+
+Redis中主节点接收到的每个写请求，都会写入到一个被称为repl\_backlog的缓存空间中，这样当进行主从同步的时候，首先检查repl\_backlog中的缓存是否能满足同步需求，这个过程就是部分同步。
+
+考虑到全量同步是一个很重量级别并且耗时很长的操作，部分同步机制能在很多情况下极大的减小同步的时间与开销。
+
+#### 重同步问题
+
+通过上面的介绍大概了解了主从同步原理，我们在将注意力放在加载RDB文件所花费的三分钟时间上。在这段时间内，主节点不断接收前端的请求，这些请求不断的被加入到repl\_backlog中，但是因为Redis的单线程特性，从节点是不能接收主节点的同步写请求的。所以不断有数据写入到repl\_backlog的同时却没有消费。
+
+当repl_backlog满的时候就不能满足部分同步的要求了，所以部分同步失败，需要又一次进行全量同步，如此形成无限循环，导致了主从重同步现象的出现。不仅侵占了带宽，而且影响主节点的服务。
+
+#### 解决方案
+
+至此解决方案就很明显了，调大repl_backlog。
+
+
+Redis中默认的repl\_backlog大小为1M，这是一个比较小的值，我们的集群中曾经设置为100M，有时候还是会出现主从重同步现象，后来改为200M，一切太平。可以通过以下命令修改repl\_backlog的大小：
+
+
+</code></pre></div></div>
+<p>//200Mredis-cli -h xxx -p xxx config set repl-backlog-size 209715200</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+内存碎片
+----
+
+首先对于绝大部分系统内存碎片是一定存在的。试想内存是一整块连续的区域，而数据的长度可以是任意的，并且会随时发生变化，随着时间的推移，在各个数据块中间一定会夹杂着小块的难以利用的内存，所以在Redis中内存碎片是存在的。  
+
+在Redis中通过info memory命令能查看内存及碎片情况：
+
+
+</code></pre></div></div>
+<h1 id="memory">Memory</h1>
+<p>used_memory:4221671264          /* 内存分配器为数据分配出去的内存大小，可以认为是数据的大小 <em>/<br />
+used_memory_human:3.93G         /</em> used_memoryd的阅读友好形式 <em>/<br />
+used_memory_rss:4508459008      /</em> 操作系统角度上Redis占用的物理内存空间大小，注意不包含swap <em>/<br />
+used_memory_peak:4251487304     /</em> used_memory的峰值大小 <em>/<br />
+used_memory_peak_human:3.96G    /</em> used_memory_peak的阅读友好形式 <em>/<br />
+used_memory_lua:34816mem_fragmentation_ratio:1.07    /</em> 碎片率 <em>/<br />
+mem_allocator:jemalloc-3.6.0    /</em> 使用的内存分配器 */</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+对于每一项的意义请注意查看注释部分，也可以参考官网上info命令memory部分。Redis中内存碎片计算公式为：
+
+</code></pre></div></div>
+<p>mem_fragmentation_ratio = used_memory_rss / used_memory</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+可以看出上边的Redis实例的内存碎片率为1.07，是一个较小的值，这也是正常的情况，有正常情况就有不正常的情况。发生数据迁移之后的Redis碎片率会很高，以下是迁移数据后的Redis的碎片情况：
+
+
+</code></pre></div></div>
+<p>used_memory:4854837632<br />
+used_memory_human:4.52G<br />
+used_memory_rss:7362924544<br />
+used_memory_peak:7061034784<br />
+used_memory_peak_human:6.58G<br />
+used_memory_lua:39936<br />
+mem_fragmentation_ratio:1.52<br />
+mem_allocator:jemalloc-3.6.0</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+可以看到碎片率是1.52，也就是说有三分之一的内存被浪费掉了。针对以上两种情况，对于碎片简单的分为两种：
+
+*   常规碎片
+    
+*   迁移碎片
+    
+
+常规碎片数量较小，而且一定会存在，可以不用理会。那么如何去掉迁移碎片呢？其实方案很简单，只需要先BGSAVE再重新启动节点，重新加载RDB文件会去除绝大部分碎片。
+
+但是这种方案有较长的服务不可用窗口期，所以需要另一种较好的方案。这种方案需要Redis采用主从结构为前提，主要思路是先通过重启的方式处理掉从节点的碎片，之后进行主从切换，最后处理老的主节点的碎。这样通过极小的服务不可用时间窗口为代价消除了绝大大部分碎片。
+
+Redis Cluster剔除节点失败
+-------------------
+
+Redis Cluster采用无中心的集群模式，集群中所有节点通过互相交换消息来维持一致性。当有新节点需要加入集群时，只需要将它与集群中的一个节点建立联系即可，通过集群间节点互相交换消息所有节点都会互相认识。所以当需要剔除节点的时候，需要向所有节点发送cluster forget命令。
+
+而向集群所有节点发送命令需要一段时间，在这段时间内已经接收到cluster forget命令的节点与没有接收的节点会发生信息交换，从而导致cluster forget命令失效。
+
+为了应对这个问题Redis设计了一个黑名单机制。当节点接收到cluster forget命令后，不仅会将被踢节点从自身的节点列表中移除，还会将被剔除的节点添加入到自身的黑名单中。当与其它节点进行消息交换的时候，节点会忽略掉黑名单内的节点。所以通过向所有节点发送cluster forget命令就能顺利地剔除节点。
+
+但是黑名单内的节点不应该永远存在于黑名单中，那样会导致被踢掉的节点不能再次加入到集群中，同时也可能导致不可预期的内存膨胀问题。所以黑名单是需要有时效性的，Redis设置的时间为一分钟。
+
+所以当剔除节点的时候，在一分钟内没能向所有节点发出cluster forget命令，会导致剔除失败，尤其在集群规模较大的时候会经常发生。
+
+解决方案是多个进程发送cluster forget命令，是不是很简单。
+
+迁移数据时的JedisAskDataException异常
+-----------------------------
+
+#### 问题描述
+
+Redis Cluster集群扩容，需要将一部分数据从老节点迁移到新节点。在迁移数据过程中会出现较多的JedisAskDataException异常。
+
+#### 迁移流程
+
+由于官方提供迁移工具redis-trib在大规模数据迁移上的一些限制，我们自己开发了迁移工具，Redis Cluster中数据迁移是以Slot为单位的，迁移一个Slot主要流程如下：
+
+</code></pre></div></div>
+<p>1) 目标节点 cluster setslot <slot> importing <source_id>  
+2) 源节点   cluster setslot <slot> migrating <target_id>  
+3) 源节点   cluster getkeysinslot <slot> <count>  ==&gt; keys 4) 源节点   migrate <target_ip> <target_port> <key> 0 <timeout>  
+5) 重复3&amp;4直到迁移完成6) 任一节点 cluster setslot <slot> node <target_id></target_id></slot></timeout></key></target_port></target_ip></count></slot></target_id></slot></source_id></slot></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+我们使用Redis中的MIGRATE命令来把数据从一个节点迁移到另外一个节点。MIGRATE命令实现机制是先在源节点上DUMP数据，再在目标节点上RESTORE它。
+
+但是DUMP命令并不会包含过期信息，又因为集群中所有的数据都有过期时间，所以我们需要额外的设置过期时间。所以迁移一个SLOT有点类似如下：
+
+</code></pre></div></div>
+<p>while (from.clusterCountKeysInSlot(slot) != 0) {   <br />
+    keys = from.clusterGetKeysInSlot(slot, 100);    for (String key : keys) {        //获取key的ttl        Long ttl = from.pttl(key);        if (ttl &gt; 0) {        <br />
+            from.migrate(host, port, key, 0, 2000);            to.asking();            to.pexpire(key, ttl);        }    }}
+```</p>
+
+<p>但是上边的迁移工具在运行过程中报了较多的JedisAskDataException异常，通过堆栈发现是“Long ttl = from.pttl(key)”这一行导致的。为了解释上述异常，我们需要先了解Redis的一些内部机制。</p>
+
+<h4 id="redis数据过期机制">Redis数据过期机制</h4>
+
+<p>Redis数据过期混合使用两种策略</p>
+
+<ul>
+  <li>
+    <p>主动过期策略：定时扫描过期表，并删除过期数据，注意这里并不会扫描整个过期表，为了减小任务引起的主线程停顿，每次只扫描一部分数据，这样的机制导致数据集中可能存在较多已经过期但是并没有删除的数据。</p>
+  </li>
+  <li>
+    <p>被动过期策略：当客户端访问数据的时候，首先检查它是否已经过期，如果过期则删掉它，并返回数据不存在标识。</p>
+  </li>
+</ul>
+
+<p>这样的过期机制兼顾了每次任务的停顿时间与已经过期数据不被访问的功能性，充分体现了作者优秀的设计能力，详细参考官网数据过期机制。</p>
+
+<h4 id="open状态slot访问机制">Open状态Slot访问机制</h4>
+
+<p>在迁移Slot的过程中，需要先在目标节点将Slot设置为importing状态，然后在源节点中将Slot设置为migrating 状态，我们称这种Slot为Open状态的Slot。</p>
+
+<p>因为处于Open状态的Slot中的数据分散在源与目标两个节点上，所以如果需要访问Slot中的数据或者添加数据到Slot中，需要特殊的访问规则。Redis推荐规则是首先访问源节点再去访问目标节点。如果源节点不存在，Redis会返回ASK标记给客户端，详细参考官网。</p>
+
+<h4 id="问题分析">问题分析</h4>
+
+<p>让我们回到问题本身，经过阅读Redis代码发现clusterCountKeysInSlot函数不会触发被动过期策略，所以它返回的数据包含已经过期但是没有被删除的数据。当程序执行到“Long ttl = from.pttl(key);”这一行时，首先Redis会触发触发被动过期策略删掉已经过期的数据，此时该数据已经不存在，又因为该节点处于migrating状态，所以ASK标记会被返回。而ASK标记被Jedis转化为JedisAskDataException异常。</p>
+
+<p>这种异常只需要捕获并跳过即可。</p>
+
+<h2 id="redis-cluster-flush失败">Redis Cluster flush失败</h2>
+
+<p>flush是一个极少用到的操作，不过既然碰到过诡异的现象，也记录在此。</p>
+
+<p>问题场景是在Reids Cluster中使用主从模式，向主节点发送flush命令，预期主从节点都会清空数据库。但是诡异的现象出现了，我们得到的结果是主从节点发生了切换，并且数据并没有被清空。</p>
+
+<p>分析以上case，Redis采用单线程模型，flush操作执行的时候会阻塞所有其它操作，包括集群间心跳包。当Redis中有大量数据的时候，flush操作会消耗较长时间。所以该节点较长时间不能跟集群通信，当达到一定阈值的时候，集群会判定该节点为fail，并且会切换主从状态。</p>
+
+<p>Redis采用异步的方式进行主从同步，flush操作在主节点执行完成之后，才会将命令同步到从节点。此时老的从节点变为了主节点，它不会再接受来自老的主节点的删除数据的操作。</p>
+
+<p>当老的主节点flush完成的时候，它恢复与集群中其它节点的通讯，得知自己被变成了从节点，所又会把数据同步过来。最终造成了主从节点发生了切换，并且数据没有被清空的现象。</p>
+
+<p>解决方式是临时调大集群中所有节点的cluster-node-timeout参数。</p>
+
+<h2 id="redis启动异常问题">Redis启动异常问题</h2>
+
+<p>这也是个极少碰到的问题，同上也记录在此。</p>
+
+<p>我们集群中每个物理主机上启动多个Redis以利用多核主机的计算资源。问题发生在一次主机宕机。恢复服务的过程中，当启动某一个Redis实例的时候，Redis实例正常启动，但是集群将它标记为了fail状态。</p>
+
+<p>众所周知Redis Cluster中的实例，需要监听两个端口，一个服务端口（默认6379），另一个是集群间通讯端口（16379），它是服务端口加上10000。</p>
+
+<p>经过一番调查发现该节点的服务通讯端口，已经被集群中其它节点占用了，导致它不能与集群中其它节点通讯，被标记为fail状态。</p>
+
+<p>解决方式是找到占用该端口的Redis进程并重启。</p>
+
+<h2 id="写在最后">写在最后</h2>
+
+<p>运维是一个理论落地的过程，对于运维集群而言任何微小的异常背后都是有原因的，了解系统内部运行机制，并且着手去探究，才能更好的解释问题，消除集群的隐患。</p>
+
+<p><strong>作者介绍：吴建超</strong>，优酷土豆广告基础平台开发工程师，对互联网基础产品及大数据产品有兴趣。</p>
+
+<p>大数据杂谈（<em>ID：BigdataTina2016</em>）</p>
+
+<p><img src="https://upload-images.jianshu.io/upload_images/12698087-fc352a861ded9dd5.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="" /></p>
+
+	</article>
+</div>
+
+<footer class='site-footer'>
+        <div class='container'>
+          本站资源翻译自<a href="http://redis.io" target="_blank">redis.io</a>，
+					由<a href="/aboutus.html">redis.cn翻译团队</a>翻译，
+					更新日志请点击<a href="/update.html">这里</a>查看，
+					翻译原文版权归redis.io官方所有，翻译不正确的地方欢迎大家指出。<br> 
+					感谢各界爱心人士的热心捐赠，CRUG的成长离不开大家的帮助和支持，特别是<a href="/donation.html">Redis捐赠清单</a>里面的各位伙伴。<br>
+					联系Email:<a href="mailto:admin@redis.cn">admin@redis.cn</a>，
+					redis交流群：<a href="#">579708237</a> &nbsp; 
+					<a href="https://beian.miit.gov.cn" target="_blank">京ICP备15003959号-2</a> &nbsp;
+					<script src='http://s22.cnzz.com/stat.php?id=3593514&web_id=3593514' language='JavaScript'></script>
+					<br>    
+					<span style="font-weight:bold;color:#000000;">友情链接：</span>
+					<a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=fvilu0rm" target="_blank">阿里云</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">DBA的罗浮宫</a> &nbsp;
+					<a href="http://mdba.cn" target="_blank">VIP-陈群博客</a> &nbsp;
+					<a href="http://lib.csdn.net/base/redis" target="_blank">Redis-知识库</a> &nbsp;
+					<a href="http://www.kubernetes.org.cn" target="_blank" >Kubernetes</a> &nbsp;	
+					<a href="https://www.fanghouguo.com" target="_blank" >方后国的博客</a> &nbsp;	
+					<a href="https://aff.gae1s.com/aff.php?aff=10022" target="_blank" >ChromeGAE</a> &nbsp;	
+					<a href="http://top.chinaz.com/" target="_blank" >网站排行榜</a> &nbsp;	
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+<script>
+	if(!isMobileBrowser()){
+		window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"0","bdPos":"right","bdTop":"54.5"},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+	}
+</script>
+
+<script type='text/javascript'>
+lastScrollY=0;
+
+function heartBeat(){ 
+	var diffY;
+	if (document.documentElement && document.documentElement.scrollTop)
+	diffY = document.documentElement.scrollTop;
+	else if (document.body)
+	diffY = document.body.scrollTop
+	else
+	{/*Netscape stuff*/}
+	//alert(diffY);
+	percent=.1*(diffY-lastScrollY); 
+	if(percent>0)percent=Math.ceil(percent); 
+	else percent=Math.floor(percent); 
+	document.getElementById("lovexin12").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	document.getElementById("lovexin14").style.top=parseInt(document.getElementById
+	("lovexin12").style.top)+percent+"px";
+	lastScrollY=lastScrollY+percent; 
+	//alert(lastScrollY);
+}
+
+if(!isMobileBrowser()){
+		//suspendcode12="<DIV id=\"lovexin12\" style='width:120px;height:270px;left:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://bbs.huaweicloud.com/forum/thread-16526-1-1.html' target='_blank'><img src='/images/couplets/hw_cp_20190411_01.png'/></a></div>"
+		//suspendcode14="<DIV id=\"lovexin14\" style='width:120px;height:270px;right:2px;POSITION:absolute;TOP:320px;z-index:3;'><a href='https://activity.huaweicloud.com/2019june_promotion/index.html?utm_source=huawei&utm_medium=other&utm_campaign=618dacu&utm_content=0614#app-connection' target='_blank'><img src='/images/couplets/hw_cp_20190612.png'/></a></div>"
+		//document.write(suspendcode12); 
+		//document.write(suspendcode14); 
+		//window.setInterval("heartBeat()",1);
+}
+
+$(document).ready(function(){ 
+	
+});
+</script>
