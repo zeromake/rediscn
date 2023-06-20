@@ -129,11 +129,11 @@
 <p><br  /></p></section></section>
 <p style="line-height: 2em;"><span style="letter-spacing: 1px;font-size: 16px;">在单节点服务器我们通常是这样的</span></p>
 <p style="line-height: 2em;"><span style="letter-spacing: 1px;font-size: 16px;"><br  /></span></p>
-<p style="text-align: center;line-height: 2em;"><img class="" data-ratio="0.21380243572395127" data-s="300,640" src="/images/articles/20181020002_001.webp" data-type="png" data-w="739" style=""  /></p>
+<p style="text-align: center;line-height: 2em;"><img class="" data-ratio="0.21380243572395127" data-s="300,640" src="./images/articles/20181020002_001.webp" data-type="png" data-w="739" style=""  /></p>
 <p style="line-height: 2em;"><span style="font-size: 16px;letter-spacing: 1px;"><br  /></span></p>
 <p style="line-height: 2em;"><span style="letter-spacing: 1px;font-size: 16px;">随着企业的发展、业务的扩展。面对海量的数据，直接使用MySql会导致性能下降，数据的读写也会非常慢。于是我们就可以搭配缓存来处理海量数据。</span></p>
 <p style="line-height: 2em;"><span style="letter-spacing: 1px;font-size: 16px;">于是现在我们是这样的：</span></p>
-<p style="text-align: center;line-height: 2em;"><img class="" data-ratio="0.23816568047337278" data-s="300,640" src="/images/articles/20181020002_002.webp" data-type="png" data-w="676" style=""  /></p>
+<p style="text-align: center;line-height: 2em;"><img class="" data-ratio="0.23816568047337278" data-s="300,640" src="./images/articles/20181020002_002.webp" data-type="png" data-w="676" style=""  /></p>
 <p style="line-height: 2em;"><span style="letter-spacing: 1px;font-size: 16px;">上图只是简述了缓存的作用，当数据继续增大我们需要利用主从复制技术来达到读写分离</span></p>
 <p><br  /></p>
 <p style="line-height: 2em;"><span style="font-size: 16px;">数据库层直接与缓存进行交互，如果缓存中有数据直接返回客户端，如果没有才会从MySql中去查询。从而减小了数据库的压力，提升了效率。</span></p>
@@ -200,7 +200,7 @@
 <p><br  /></p></section></section>
 <p style="line-height: 2em;"><span style="letter-spacing: 1px;font-size: 16px;">缓存雪崩就是指缓存由于某些原因（比如 宕机、cache服务挂了或者不响应）整体crash掉了，导致大量请求到达后端数据库，从而导致数据库崩溃，整个系统崩溃，发生灾难，也就是上面提到的缓存击穿</span></p>
 <p><span style="font-size: 14px;letter-spacing: 1px;"><br  /></span></p>
-<p><span style="font-size: 14px;letter-spacing: 1px;"><img class="" data-ratio="0.47904869762174407" src="/images/articles/20181020002_003.webp" data-type="jpeg" data-w="883"  /></span></p>
+<p><span style="font-size: 14px;letter-spacing: 1px;"><img class="" data-ratio="0.47904869762174407" src="./images/articles/20181020002_003.webp" data-type="jpeg" data-w="883"  /></span></p>
 <p><span style="letter-spacing: 1px;font-size: 12px;color: rgb(178, 178, 178);">图片来源自网络</span></p>
 <p><span style="font-size: 14px;letter-spacing: 1px;"><br  /></span></p>
 <p style="line-height: 2em;"><span style="letter-spacing: 1px;font-size: 16px;">如何避免雪崩：</span></p>

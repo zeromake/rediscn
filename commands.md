@@ -10,7 +10,7 @@ discuzTid: 850
 <section id='commands'>
 <div class='container'>
 	<div class='text' style='text-align:left;'>
-		 &nbsp; &nbsp;Redis命令十分丰富，包括的命令组有Cluster、Connection、Geo、Hashes、HyperLogLog、Keys、Lists、Pub/Sub、Scripting、Server、Sets、Sorted Sets、Strings、Transactions一共14个redis命令组两百多个redis命令，Redis中文命令大全。您可以通过下面的检索功能快速查找命令，已下是全部已知的redis命令列表。如果您有兴趣的话也可以查看我们的<a href="/map.html">网站结构图</a>,它以节点图的形式展示了所有redis命令。
+		 &nbsp; &nbsp;Redis命令十分丰富，包括的命令组有Cluster、Connection、Geo、Hashes、HyperLogLog、Keys、Lists、Pub/Sub、Scripting、Server、Sets、Sorted Sets、Strings、Transactions一共14个redis命令组两百多个redis命令，Redis中文命令大全。您可以通过下面的检索功能快速查找命令，已下是全部已知的redis命令列表。如果您有兴趣的话也可以查看我们的<a src="./map.html">网站结构图</a>,它以节点图的形式展示了所有redis命令。
 	</div>
 </div>
 <nav>
@@ -47,7 +47,7 @@ discuzTid: 850
 <div class='container'>
           <ul>
             <li data-group='string' data-name='append'>
-              <a href='/commands/append.html'>
+              <a src='./commands/append.html'>
                 <span class='command'>
                   APPEND
                   <span class='args'>
@@ -59,7 +59,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='connection' data-name='auth'>
-              <a href='/commands/auth.html'>
+              <a src='./commands/auth.html'>
                 <span class='command'>
                   AUTH
                   <span class='args'>
@@ -70,7 +70,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='bgrewriteaof'>
-              <a href='/commands/bgrewriteaof.html'>
+              <a src='./commands/bgrewriteaof.html'>
                 <span class='command'>
                   BGREWRITEAOF
                   <span class='args'>
@@ -80,7 +80,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='bgsave'>
-              <a href='/commands/bgsave.html'>
+              <a src='./commands/bgsave.html'>
                 <span class='command'>
                   BGSAVE
                   <span class='args'>
@@ -90,7 +90,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='bitcount'>
-              <a href='/commands/bitcount.html'>
+              <a src='./commands/bitcount.html'>
                 <span class='command'>
                   BITCOUNT
                   <span class='args'>
@@ -102,7 +102,7 @@ discuzTid: 850
               </a>
             </li>
              <li data-group='string' data-name='bitfield'>
-              <a href='/commands/bitfield.html'>
+              <a src='./commands/bitfield.html'>
                 <span class='command'>
                   BITFIELD
                   <span class='args'>
@@ -117,7 +117,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='bitop'>
-              <a href='/commands/bitop.html'>
+              <a src='./commands/bitop.html'>
                 <span class='command'>
                   BITOP
                   <span class='args'>
@@ -130,7 +130,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='bitpos'>
-              <a href='/commands/bitpos.html'>
+              <a src='./commands/bitpos.html'>
                 <span class='command'>
                   BITPOS
                   <span class='args'>
@@ -144,7 +144,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='blpop'>
-              <a href='/commands/blpop.html'>
+              <a src='./commands/blpop.html'>
                 <span class='command'>
                   BLPOP
                   <span class='args'>
@@ -156,7 +156,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='brpop'>
-              <a href='/commands/brpop.html'>
+              <a src='./commands/brpop.html'>
                 <span class='command'>
                   BRPOP
                   <span class='args'>
@@ -168,7 +168,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='brpoplpush'>
-              <a href='/commands/brpoplpush.html'>
+              <a src='./commands/brpoplpush.html'>
                 <span class='command'>
                   BRPOPLPUSH
                   <span class='args'>
@@ -181,7 +181,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='sortedsets' data-name='bzpopmax'>
-              <a href='/commands/bzpopmax.html'>
+              <a src='./commands/bzpopmax.html'>
                 <span class='command'>
                   BZPOPMAX
                   <span class='args'>
@@ -192,7 +192,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='sortedsets' data-name='bzpopmin'>
-              <a href='/commands/bzpopmin.html'>
+              <a src='./commands/bzpopmin.html'>
                 <span class='command'>
                   BZPOPMIN
                   <span class='args'>
@@ -203,7 +203,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='client kill'>
-              <a href='/commands/client-kill.html'>
+              <a src='./commands/client-kill.html'>
                 <span class='command'>
                   CLIENT KILL
                   <span class='args'>
@@ -218,7 +218,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='client list'>
-              <a href='/commands/client-list.html'>
+              <a src='./commands/client-list.html'>
                 <span class='command'>
                   CLIENT LIST
                   <span class='args'>
@@ -228,7 +228,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='client getname'>
-              <a href='/commands/client-getname.html'>
+              <a src='./commands/client-getname.html'>
                 <span class='command'>
                   CLIENT GETNAME
                   <span class='args'>
@@ -238,7 +238,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='client id'>
-              <a href='/commands/client-id.html'>
+              <a src='./commands/client-id.html'>
                 <span class='command'>
                   CLIENT ID
                   <span class='args'>
@@ -248,7 +248,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='client pause'>
-              <a href='/commands/client-pause.html'>
+              <a src='./commands/client-pause.html'>
                 <span class='command'>
                   CLIENT PAUSE
                   <span class='args'>
@@ -259,7 +259,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='client reply'>
-              <a href='/commands/client-reply.html'>
+              <a src='./commands/client-reply.html'>
                 <span class='command'>
                   CLIENT REPLY
                   <span class='args'>
@@ -270,7 +270,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='client setname'>
-              <a href='/commands/client-setname.html'>
+              <a src='./commands/client-setname.html'>
                 <span class='command'>
                   CLIENT SETNAME
                   <span class='args'>
@@ -281,7 +281,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='client unblock'>
-              <a href='/commands/client-unblock.html'>
+              <a src='./commands/client-unblock.html'>
                 <span class='command'>
                   CLIENT UNBLOCK
                   <span class='args'>
@@ -292,7 +292,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster addslots'>
-              <a href='/commands/cluster-addslots.html'>
+              <a src='./commands/cluster-addslots.html'>
                 <span class='command'>
                   CLUSTER ADDSLOTS
                   <span class='args'>
@@ -303,7 +303,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster count-failure-reports'>
-              <a href='/commands/cluster-count-failure-reports.html'>
+              <a src='./commands/cluster-count-failure-reports.html'>
                 <span class='command'>
                   CLUSTER COUNT-FAILURE-REPORTS
                   <span class='args'>
@@ -314,7 +314,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster countkeysinslot'>
-              <a href='/commands/cluster-countkeysinslot.html'>
+              <a src='./commands/cluster-countkeysinslot.html'>
                 <span class='command'>
                   CLUSTER COUNTKEYSINSLOT
                   <span class='args'>
@@ -325,7 +325,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster delslots'>
-              <a href='/commands/cluster-delslots.html'>
+              <a src='./commands/cluster-delslots.html'>
                 <span class='command'>
                   CLUSTER DELSLOTS
                   <span class='args'>
@@ -336,7 +336,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster failover'>
-              <a href='/commands/cluster-failover.html'>
+              <a src='./commands/cluster-failover.html'>
                 <span class='command'>
                   CLUSTER FAILOVER
                   <span class='args'>
@@ -347,7 +347,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster forget'>
-              <a href='/commands/cluster-forget.html'>
+              <a src='./commands/cluster-forget.html'>
                 <span class='command'>
                   CLUSTER FORGET
                   <span class='args'>
@@ -358,7 +358,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster getkeysinslot'>
-              <a href='/commands/cluster-getkeysinslot.html'>
+              <a src='./commands/cluster-getkeysinslot.html'>
                 <span class='command'>
                   CLUSTER GETKEYSINSLOT
                   <span class='args'>
@@ -370,7 +370,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster info'>
-              <a href='/commands/cluster-info.html'>
+              <a src='./commands/cluster-info.html'>
                 <span class='command'>
                   CLUSTER INFO
                   <span class='args'>
@@ -380,7 +380,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster keyslot'>
-              <a href='/commands/cluster-keyslot.html'>
+              <a src='./commands/cluster-keyslot.html'>
                 <span class='command'>
                   CLUSTER KEYSLOT
                   <span class='args'>
@@ -391,7 +391,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster meet'>
-              <a href='/commands/cluster-meet.html'>
+              <a src='./commands/cluster-meet.html'>
                 <span class='command'>
                   CLUSTER MEET
                   <span class='args'>
@@ -403,7 +403,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster nodes'>
-              <a href='/commands/cluster-nodes.html'>
+              <a src='./commands/cluster-nodes.html'>
                 <span class='command'>
                   CLUSTER NODES
                   <span class='args'>
@@ -413,7 +413,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='cluster' data-name='cluster replicas'>
-              <a href='/commands/cluster-replicas.html'>
+              <a src='./commands/cluster-replicas.html'>
                 <span class='command'>
                   CLUSTER REPLICAS
                   <span class='args'>
@@ -424,7 +424,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster replicate'>
-              <a href='/commands/cluster-replicate.html'>
+              <a src='./commands/cluster-replicate.html'>
                 <span class='command'>
                   CLUSTER REPLICATE
                   <span class='args'>
@@ -435,7 +435,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster reset'>
-              <a href='/commands/cluster-reset.html'>
+              <a src='./commands/cluster-reset.html'>
                 <span class='command'>
                   CLUSTER RESET
                   <span class='args'>
@@ -446,7 +446,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster saveconfig'>
-              <a href='/commands/cluster-saveconfig.html'>
+              <a src='./commands/cluster-saveconfig.html'>
                 <span class='command'>
                   CLUSTER SAVECONFIG
                   <span class='args'>
@@ -456,7 +456,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster set-config-epoch'>
-              <a href='/commands/cluster-set-config-epoch.html'>
+              <a src='./commands/cluster-set-config-epoch.html'>
                 <span class='command'>
                   CLUSTER SET-CONFIG-EPOCH
                   <span class='args'>
@@ -467,7 +467,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster setslot'>
-              <a href='/commands/cluster-setslot.html'>
+              <a src='./commands/cluster-setslot.html'>
                 <span class='command'>
                   CLUSTER SETSLOT
                   <span class='args'>
@@ -480,7 +480,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster slaves'>
-              <a href='/commands/cluster-slaves.html'>
+              <a src='./commands/cluster-slaves.html'>
                 <span class='command'>
                   CLUSTER SLAVES
                   <span class='args'>
@@ -491,7 +491,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='cluster slots'>
-              <a href='/commands/cluster-slots.html'>
+              <a src='./commands/cluster-slots.html'>
                 <span class='command'>
                   CLUSTER SLOTS
                   <span class='args'>
@@ -501,7 +501,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='command'>
-              <a href='/commands/command.html'>
+              <a src='./commands/command.html'>
                 <span class='command'>
                   COMMAND
                   <span class='args'>
@@ -511,7 +511,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='command count'>
-              <a href='/commands/command-count.html'>
+              <a src='./commands/command-count.html'>
                 <span class='command'>
                   COMMAND COUNT
                   <span class='args'>
@@ -521,7 +521,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='command getkeys'>
-              <a href='/commands/command-getkeys.html'>
+              <a src='./commands/command-getkeys.html'>
                 <span class='command'>
                   COMMAND GETKEYS
                   <span class='args'>
@@ -531,7 +531,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='command info'>
-              <a href='/commands/command-info.html'>
+              <a src='./commands/command-info.html'>
                 <span class='command'>
                   COMMAND INFO
                   <span class='args'>
@@ -542,7 +542,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='config get'>
-              <a href='/commands/config-get.html'>
+              <a src='./commands/config-get.html'>
                 <span class='command'>
                   CONFIG GET
                   <span class='args'>
@@ -553,7 +553,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='config rewrite'>
-              <a href='/commands/config-rewrite.html'>
+              <a src='./commands/config-rewrite.html'>
                 <span class='command'>
                   CONFIG REWRITE
                   <span class='args'>
@@ -563,7 +563,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='config set'>
-              <a href='/commands/config-set.html'>
+              <a src='./commands/config-set.html'>
                 <span class='command'>
                   CONFIG SET
                   <span class='args'>
@@ -575,7 +575,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='config resetstat'>
-              <a href='/commands/config-resetstat.html'>
+              <a src='./commands/config-resetstat.html'>
                 <span class='command'>
                   CONFIG RESETSTAT
                   <span class='args'>
@@ -585,7 +585,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='dbsize'>
-              <a href='/commands/dbsize.html'>
+              <a src='./commands/dbsize.html'>
                 <span class='command'>
                   DBSIZE
                   <span class='args'>
@@ -595,7 +595,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='debug object'>
-              <a href='/commands/debug-object.html'>
+              <a src='./commands/debug-object.html'>
                 <span class='command'>
                   DEBUG OBJECT
                   <span class='args'>
@@ -606,7 +606,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='debug segfault'>
-              <a href='/commands/debug-segfault.html'>
+              <a src='./commands/debug-segfault.html'>
                 <span class='command'>
                   DEBUG SEGFAULT
                   <span class='args'>
@@ -616,7 +616,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='decr'>
-              <a href='/commands/decr.html'>
+              <a src='./commands/decr.html'>
                 <span class='command'>
                   DECR
                   <span class='args'>
@@ -627,7 +627,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='decrby'>
-              <a href='/commands/decrby.html'>
+              <a src='./commands/decrby.html'>
                 <span class='command'>
                   DECRBY
                   <span class='args'>
@@ -639,7 +639,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='del'>
-              <a href='/commands/del.html'>
+              <a src='./commands/del.html'>
                 <span class='command'>
                   DEL
                   <span class='args'>
@@ -650,7 +650,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='transactions' data-name='discard'>
-              <a href='/commands/discard.html'>
+              <a src='./commands/discard.html'>
                 <span class='command'>
                   DISCARD
                   <span class='args'>
@@ -660,7 +660,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='dump'>
-              <a href='/commands/dump.html'>
+              <a src='./commands/dump.html'>
                 <span class='command'>
                   DUMP
                   <span class='args'>
@@ -671,7 +671,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='connection' data-name='echo'>
-              <a href='/commands/echo.html'>
+              <a src='./commands/echo.html'>
                 <span class='command'>
                   ECHO
                   <span class='args'>
@@ -682,7 +682,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='scripting' data-name='eval'>
-              <a href='/commands/eval.html'>
+              <a src='./commands/eval.html'>
                 <span class='command'>
                   EVAL
                   <span class='args'>
@@ -696,7 +696,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='scripting' data-name='evalsha'>
-              <a href='/commands/evalsha.html'>
+              <a src='./commands/evalsha.html'>
                 <span class='command'>
                   EVALSHA
                   <span class='args'>
@@ -710,7 +710,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='transactions' data-name='exec'>
-              <a href='/commands/exec.html'>
+              <a src='./commands/exec.html'>
                 <span class='command'>
                   EXEC
                   <span class='args'>
@@ -720,7 +720,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='exists'>
-              <a href='/commands/exists.html'>
+              <a src='./commands/exists.html'>
                 <span class='command'>
                   EXISTS
                   <span class='args'>
@@ -731,7 +731,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='expire'>
-              <a href='/commands/expire.html'>
+              <a src='./commands/expire.html'>
                 <span class='command'>
                   EXPIRE
                   <span class='args'>
@@ -743,7 +743,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='expireat'>
-              <a href='/commands/expireat.html'>
+              <a src='./commands/expireat.html'>
                 <span class='command'>
                   EXPIREAT
                   <span class='args'>
@@ -755,7 +755,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='flushall'>
-              <a href='/commands/flushall.html'>
+              <a src='./commands/flushall.html'>
                 <span class='command'>
                   FLUSHALL
                   <span class='args'>
@@ -765,7 +765,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='flushdb'>
-              <a href='/commands/flushdb.html'>
+              <a src='./commands/flushdb.html'>
                 <span class='command'>
                   FLUSHDB
                   <span class='args'>
@@ -775,7 +775,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='geo' data-name='geoadd'>
-              <a href='/commands/geoadd.html'>
+              <a src='./commands/geoadd.html'>
                 <span class='command'>
                   GEOADD
                   <span class='args'>
@@ -787,7 +787,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='geo' data-name='geohash'>
-              <a href='/commands/geohash.html'>
+              <a src='./commands/geohash.html'>
                 <span class='command'>
                   GEOHASH
                   <span class='args'>
@@ -799,7 +799,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='geo' data-name='geopos'>
-              <a href='/commands/geopos.html'>
+              <a src='./commands/geopos.html'>
                 <span class='command'>
                   GEOPOS
                   <span class='args'>
@@ -811,7 +811,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='geo' data-name='geodist'>
-              <a href='/commands/geodist.html'>
+              <a src='./commands/geodist.html'>
                 <span class='command'>
                   GEODIST
                   <span class='args'>
@@ -825,7 +825,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='geo' data-name='georadius'>
-              <a href='/commands/georadius.html'>
+              <a src='./commands/georadius.html'>
                 <span class='command'>
                   GEORADIUS
                   <span class='args'>
@@ -844,7 +844,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='geo' data-name='georadiusbymember'>
-              <a href='/commands/georadiusbymember.html'>
+              <a src='./commands/georadiusbymember.html'>
                 <span class='command'>
                   GEORADIUSBYMEMBER
                   <span class='args'>
@@ -862,7 +862,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='get'>
-              <a href='/commands/get.html'>
+              <a src='./commands/get.html'>
                 <span class='command'>
                   GET
                   <span class='args'>
@@ -873,7 +873,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='getbit'>
-              <a href='/commands/getbit.html'>
+              <a src='./commands/getbit.html'>
                 <span class='command'>
                   GETBIT
                   <span class='args'>
@@ -885,7 +885,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='getrange'>
-              <a href='/commands/getrange.html'>
+              <a src='./commands/getrange.html'>
                 <span class='command'>
                   GETRANGE
                   <span class='args'>
@@ -898,7 +898,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='getset'>
-              <a href='/commands/getset.html'>
+              <a src='./commands/getset.html'>
                 <span class='command'>
                   GETSET
                   <span class='args'>
@@ -910,7 +910,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hdel'>
-              <a href='/commands/hdel.html'>
+              <a src='./commands/hdel.html'>
                 <span class='command'>
                   HDEL
                   <span class='args'>
@@ -922,7 +922,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hexists'>
-              <a href='/commands/hexists.html'>
+              <a src='./commands/hexists.html'>
                 <span class='command'>
                   HEXISTS
                   <span class='args'>
@@ -934,7 +934,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hget'>
-              <a href='/commands/hget.html'>
+              <a src='./commands/hget.html'>
                 <span class='command'>
                   HGET
                   <span class='args'>
@@ -946,7 +946,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hgetall'>
-              <a href='/commands/hgetall.html'>
+              <a src='./commands/hgetall.html'>
                 <span class='command'>
                   HGETALL
                   <span class='args'>
@@ -957,7 +957,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hincrby'>
-              <a href='/commands/hincrby.html'>
+              <a src='./commands/hincrby.html'>
                 <span class='command'>
                   HINCRBY
                   <span class='args'>
@@ -970,7 +970,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hincrbyfloat'>
-              <a href='/commands/hincrbyfloat.html'>
+              <a src='./commands/hincrbyfloat.html'>
                 <span class='command'>
                   HINCRBYFLOAT
                   <span class='args'>
@@ -983,7 +983,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hkeys'>
-              <a href='/commands/hkeys.html'>
+              <a src='./commands/hkeys.html'>
                 <span class='command'>
                   HKEYS
                   <span class='args'>
@@ -994,7 +994,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hlen'>
-              <a href='/commands/hlen.html'>
+              <a src='./commands/hlen.html'>
                 <span class='command'>
                   HLEN
                   <span class='args'>
@@ -1005,7 +1005,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hmget'>
-              <a href='/commands/hmget.html'>
+              <a src='./commands/hmget.html'>
                 <span class='command'>
                   HMGET
                   <span class='args'>
@@ -1017,7 +1017,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hmset'>
-              <a href='/commands/hmset.html'>
+              <a src='./commands/hmset.html'>
                 <span class='command'>
                   HMSET
                   <span class='args'>
@@ -1029,7 +1029,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hset'>
-              <a href='/commands/hset.html'>
+              <a src='./commands/hset.html'>
                 <span class='command'>
                   HSET
                   <span class='args'>
@@ -1042,7 +1042,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hsetnx'>
-              <a href='/commands/hsetnx.html'>
+              <a src='./commands/hsetnx.html'>
                 <span class='command'>
                   HSETNX
                   <span class='args'>
@@ -1055,7 +1055,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hstrlen'>
-              <a href='/commands/hstrlen.html'>
+              <a src='./commands/hstrlen.html'>
                 <span class='command'>
                   HSTRLEN
                   <span class='args'>
@@ -1067,7 +1067,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hvals'>
-              <a href='/commands/hvals.html'>
+              <a src='./commands/hvals.html'>
                 <span class='command'>
                   HVALS
                   <span class='args'>
@@ -1078,7 +1078,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='incr'>
-              <a href='/commands/incr.html'>
+              <a src='./commands/incr.html'>
                 <span class='command'>
                   INCR
                   <span class='args'>
@@ -1089,7 +1089,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='incrby'>
-              <a href='/commands/incrby.html'>
+              <a src='./commands/incrby.html'>
                 <span class='command'>
                   INCRBY
                   <span class='args'>
@@ -1101,7 +1101,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='incrbyfloat'>
-              <a href='/commands/incrbyfloat.html'>
+              <a src='./commands/incrbyfloat.html'>
                 <span class='command'>
                   INCRBYFLOAT
                   <span class='args'>
@@ -1113,7 +1113,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='info'>
-              <a href='/commands/info.html'>
+              <a src='./commands/info.html'>
                 <span class='command'>
                   INFO
                   <span class='args'>
@@ -1124,7 +1124,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='keys'>
-              <a href='/commands/keys.html'>
+              <a src='./commands/keys.html'>
                 <span class='command'>
                   KEYS
                   <span class='args'>
@@ -1135,7 +1135,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='lastsave'>
-              <a href='/commands/lastsave.html'>
+              <a src='./commands/lastsave.html'>
                 <span class='command'>
                   LASTSAVE
                   <span class='args'>
@@ -1145,7 +1145,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='lindex'>
-              <a href='/commands/lindex.html'>
+              <a src='./commands/lindex.html'>
                 <span class='command'>
                   LINDEX
                   <span class='args'>
@@ -1157,7 +1157,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='linsert'>
-              <a href='/commands/linsert.html'>
+              <a src='./commands/linsert.html'>
                 <span class='command'>
                   LINSERT
                   <span class='args'>
@@ -1171,7 +1171,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='llen'>
-              <a href='/commands/llen.html'>
+              <a src='./commands/llen.html'>
                 <span class='command'>
                   LLEN
                   <span class='args'>
@@ -1182,7 +1182,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='lpop'>
-              <a href='/commands/lpop.html'>
+              <a src='./commands/lpop.html'>
                 <span class='command'>
                   LPOP
                   <span class='args'>
@@ -1193,7 +1193,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='lpush'>
-              <a href='/commands/lpush.html'>
+              <a src='./commands/lpush.html'>
                 <span class='command'>
                   LPUSH
                   <span class='args'>
@@ -1205,7 +1205,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='lpushx'>
-              <a href='/commands/lpushx.html'>
+              <a src='./commands/lpushx.html'>
                 <span class='command'>
                   LPUSHX
                   <span class='args'>
@@ -1217,7 +1217,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='lrange'>
-              <a href='/commands/lrange.html'>
+              <a src='./commands/lrange.html'>
                 <span class='command'>
                   LRANGE
                   <span class='args'>
@@ -1230,7 +1230,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='lrem'>
-              <a href='/commands/lrem.html'>
+              <a src='./commands/lrem.html'>
                 <span class='command'>
                   LREM
                   <span class='args'>
@@ -1243,7 +1243,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='lset'>
-              <a href='/commands/lset.html'>
+              <a src='./commands/lset.html'>
                 <span class='command'>
                   LSET
                   <span class='args'>
@@ -1256,7 +1256,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='ltrim'>
-              <a href='/commands/ltrim.html'>
+              <a src='./commands/ltrim.html'>
                 <span class='command'>
                   LTRIM
                   <span class='args'>
@@ -1269,7 +1269,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='memory doctor'>
-              <a href='/commands/memory-doctor.html'>
+              <a src='./commands/memory-doctor.html'>
                 <span class='command'>
                   MEMORY DOCTOR
                   <span class='args'>
@@ -1279,7 +1279,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='memory help'>
-              <a href='/commands/memory-help.html'>
+              <a src='./commands/memory-help.html'>
                 <span class='command'>
                   MEMORY HELP
                   <span class='args'>
@@ -1289,7 +1289,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='memory malloc stats'>
-              <a href='/commands/memory-malloc-stats.html'>
+              <a src='./commands/memory-malloc-stats.html'>
                 <span class='command'>
                   MEMORY-MALLOC-STATS
                   <span class='args'>
@@ -1299,7 +1299,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='memory purge'>
-              <a href='/commands/memory-purge.html'>
+              <a src='./commands/memory-purge.html'>
                 <span class='command'>
                   MEMORY-PURGE
                   <span class='args'>
@@ -1309,7 +1309,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='memory stats'>
-              <a href='/commands/memory-stats.html'>
+              <a src='./commands/memory-stats.html'>
                 <span class='command'>
                   MEMORY-STATS
                   <span class='args'>
@@ -1319,7 +1319,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='memory usage'>
-              <a href='/commands/memory-usage.html'>
+              <a src='./commands/memory-usage.html'>
                 <span class='command'>
                   MEMORY-USAGE
                   <span class='args'>
@@ -1330,7 +1330,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='mget'>
-              <a href='/commands/mget.html'>
+              <a src='./commands/mget.html'>
                 <span class='command'>
                   MGET
                   <span class='args'>
@@ -1341,7 +1341,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='migrate'>
-              <a href='/commands/migrate.html'>
+              <a src='./commands/migrate.html'>
                 <span class='command'>
                   MIGRATE
                   <span class='args'>
@@ -1358,7 +1358,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='monitor'>
-              <a href='/commands/monitor.html'>
+              <a src='./commands/monitor.html'>
                 <span class='command'>
                   MONITOR
                   <span class='args'>
@@ -1368,7 +1368,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='move'>
-              <a href='/commands/move.html'>
+              <a src='./commands/move.html'>
                 <span class='command'>
                   MOVE
                   <span class='args'>
@@ -1380,7 +1380,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='mset'>
-              <a href='/commands/mset.html'>
+              <a src='./commands/mset.html'>
                 <span class='command'>
                   MSET
                   <span class='args'>
@@ -1391,7 +1391,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='msetnx'>
-              <a href='/commands/msetnx.html'>
+              <a src='./commands/msetnx.html'>
                 <span class='command'>
                   MSETNX
                   <span class='args'>
@@ -1402,7 +1402,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='transactions' data-name='multi'>
-              <a href='/commands/multi.html'>
+              <a src='./commands/multi.html'>
                 <span class='command'>
                   MULTI
                   <span class='args'>
@@ -1412,7 +1412,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='object'>
-              <a href='/commands/object.html'>
+              <a src='./commands/object.html'>
                 <span class='command'>
                   OBJECT
                   <span class='args'>
@@ -1424,7 +1424,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='persist'>
-              <a href='/commands/persist.html'>
+              <a src='./commands/persist.html'>
                 <span class='command'>
                   PERSIST
                   <span class='args'>
@@ -1435,7 +1435,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='pexpire'>
-              <a href='/commands/pexpire.html'>
+              <a src='./commands/pexpire.html'>
                 <span class='command'>
                   PEXPIRE
                   <span class='args'>
@@ -1447,7 +1447,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='pexpireat'>
-              <a href='/commands/pexpireat.html'>
+              <a src='./commands/pexpireat.html'>
                 <span class='command'>
                   PEXPIREAT
                   <span class='args'>
@@ -1459,7 +1459,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hyperloglog' data-name='pfadd'>
-              <a href='/commands/pfadd.html'>
+              <a src='./commands/pfadd.html'>
                 <span class='command'>
                   PFADD
                   <span class='args'>
@@ -1471,7 +1471,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hyperloglog' data-name='pfcount'>
-              <a href='/commands/pfcount.html'>
+              <a src='./commands/pfcount.html'>
                 <span class='command'>
                   PFCOUNT
                   <span class='args'>
@@ -1482,7 +1482,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hyperloglog' data-name='pfmerge'>
-              <a href='/commands/pfmerge.html'>
+              <a src='./commands/pfmerge.html'>
                 <span class='command'>
                   PFMERGE
                   <span class='args'>
@@ -1494,7 +1494,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='connection' data-name='ping'>
-              <a href='/commands/ping.html'>
+              <a src='./commands/ping.html'>
                 <span class='command'>
                   PING
                   <span class='args'>
@@ -1504,7 +1504,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='psetex'>
-              <a href='/commands/psetex.html'>
+              <a src='./commands/psetex.html'>
                 <span class='command'>
                   PSETEX
                   <span class='args'>
@@ -1517,7 +1517,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='pubsub' data-name='psubscribe'>
-              <a href='/commands/psubscribe.html'>
+              <a src='./commands/psubscribe.html'>
                 <span class='command'>
                   PSUBSCRIBE
                   <span class='args'>
@@ -1528,7 +1528,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='pubsub' data-name='pubsub'>
-              <a href='/commands/pubsub.html'>
+              <a src='./commands/pubsub.html'>
                 <span class='command'>
                   PUBSUB
                   <span class='args'>
@@ -1540,7 +1540,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='pttl'>
-              <a href='/commands/pttl.html'>
+              <a src='./commands/pttl.html'>
                 <span class='command'>
                   PTTL
                   <span class='args'>
@@ -1551,7 +1551,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='pubsub' data-name='publish'>
-              <a href='/commands/publish.html'>
+              <a src='./commands/publish.html'>
                 <span class='command'>
                   PUBLISH
                   <span class='args'>
@@ -1563,7 +1563,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='pubsub' data-name='punsubscribe'>
-              <a href='/commands/punsubscribe.html'>
+              <a src='./commands/punsubscribe.html'>
                 <span class='command'>
                   PUNSUBSCRIBE
                   <span class='args'>
@@ -1574,7 +1574,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='connection' data-name='quit'>
-              <a href='/commands/quit.html'>
+              <a src='./commands/quit.html'>
                 <span class='command'>
                   QUIT
                   <span class='args'>
@@ -1584,7 +1584,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='randomkey'>
-              <a href='/commands/randomkey.html'>
+              <a src='./commands/randomkey.html'>
                 <span class='command'>
                   RANDOMKEY
                   <span class='args'>
@@ -1594,7 +1594,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='readonly'>
-              <a href='/commands/readonly.html'>
+              <a src='./commands/readonly.html'>
                 <span class='command'>
                   READONLY
                   <span class='args'>
@@ -1604,7 +1604,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='cluster' data-name='readwrite'>
-              <a href='/commands/readwrite.html'>
+              <a src='./commands/readwrite.html'>
                 <span class='command'>
                   READWRITE
                   <span class='args'>
@@ -1614,7 +1614,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='rename'>
-              <a href='/commands/rename.html'>
+              <a src='./commands/rename.html'>
                 <span class='command'>
                   RENAME
                   <span class='args'>
@@ -1626,7 +1626,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='renamenx'>
-              <a href='/commands/renamenx.html'>
+              <a src='./commands/renamenx.html'>
                 <span class='command'>
                   RENAMENX
                   <span class='args'>
@@ -1638,7 +1638,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='server' data-name='replicaof'>
-              <a href='/commands/replicaof.html'>
+              <a src='./commands/replicaof.html'>
                 <span class='command'>
                   REPLICAOF
                   <span class='args'>
@@ -1649,7 +1649,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='restore'>
-              <a href='/commands/restore.html'>
+              <a src='./commands/restore.html'>
                 <span class='command'>
                   RESTORE
                   <span class='args'>
@@ -1663,7 +1663,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='role'>
-              <a href='/commands/role.html'>
+              <a src='./commands/role.html'>
                 <span class='command'>
                   ROLE
                   <span class='args'>
@@ -1673,7 +1673,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='rpop'>
-              <a href='/commands/rpop.html'>
+              <a src='./commands/rpop.html'>
                 <span class='command'>
                   RPOP
                   <span class='args'>
@@ -1684,7 +1684,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='rpoplpush'>
-              <a href='/commands/rpoplpush.html'>
+              <a src='./commands/rpoplpush.html'>
                 <span class='command'>
                   RPOPLPUSH
                   <span class='args'>
@@ -1696,7 +1696,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='rpush'>
-              <a href='/commands/rpush.html'>
+              <a src='./commands/rpush.html'>
                 <span class='command'>
                   RPUSH
                   <span class='args'>
@@ -1708,7 +1708,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='list' data-name='rpushx'>
-              <a href='/commands/rpushx.html'>
+              <a src='./commands/rpushx.html'>
                 <span class='command'>
                   RPUSHX
                   <span class='args'>
@@ -1720,7 +1720,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sadd'>
-              <a href='/commands/sadd.html'>
+              <a src='./commands/sadd.html'>
                 <span class='command'>
                   SADD
                   <span class='args'>
@@ -1732,7 +1732,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='save'>
-              <a href='/commands/save.html'>
+              <a src='./commands/save.html'>
                 <span class='command'>
                   SAVE
                   <span class='args'>
@@ -1742,7 +1742,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='scard'>
-              <a href='/commands/scard.html'>
+              <a src='./commands/scard.html'>
                 <span class='command'>
                   SCARD
                   <span class='args'>
@@ -1753,7 +1753,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='scripting' data-name='script debug'>
-              <a href='/commands/script-debug.html'>
+              <a src='./commands/script-debug.html'>
                 <span class='command'>
                   SCRIPT DEBUG
                   <span class='args'>
@@ -1764,7 +1764,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='scripting' data-name='script exists'>
-              <a href='/commands/script-exists.html'>
+              <a src='./commands/script-exists.html'>
                 <span class='command'>
                   SCRIPT EXISTS
                   <span class='args'>
@@ -1775,7 +1775,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='scripting' data-name='script flush'>
-              <a href='/commands/script-flush.html'>
+              <a src='./commands/script-flush.html'>
                 <span class='command'>
                   SCRIPT FLUSH
                   <span class='args'>
@@ -1785,7 +1785,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='scripting' data-name='script kill'>
-              <a href='/commands/script-kill.html'>
+              <a src='./commands/script-kill.html'>
                 <span class='command'>
                   SCRIPT KILL
                   <span class='args'>
@@ -1795,7 +1795,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='scripting' data-name='script load'>
-              <a href='/commands/script-load.html'>
+              <a src='./commands/script-load.html'>
                 <span class='command'>
                   SCRIPT LOAD
                   <span class='args'>
@@ -1806,7 +1806,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sdiff'>
-              <a href='/commands/sdiff.html'>
+              <a src='./commands/sdiff.html'>
                 <span class='command'>
                   SDIFF
                   <span class='args'>
@@ -1817,7 +1817,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sdiffstore'>
-              <a href='/commands/sdiffstore.html'>
+              <a src='./commands/sdiffstore.html'>
                 <span class='command'>
                   SDIFFSTORE
                   <span class='args'>
@@ -1829,7 +1829,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='connection' data-name='select'>
-              <a href='/commands/select.html'>
+              <a src='./commands/select.html'>
                 <span class='command'>
                   SELECT
                   <span class='args'>
@@ -1840,7 +1840,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='set'>
-              <a href='/commands/set.html'>
+              <a src='./commands/set.html'>
                 <span class='command'>
                   SET
                   <span class='args'>
@@ -1855,7 +1855,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='setbit'>
-              <a href='/commands/setbit.html'>
+              <a src='./commands/setbit.html'>
                 <span class='command'>
                   SETBIT
                   <span class='args'>
@@ -1868,7 +1868,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='setex'>
-              <a href='/commands/setex.html'>
+              <a src='./commands/setex.html'>
                 <span class='command'>
                   SETEX
                   <span class='args'>
@@ -1881,7 +1881,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='setnx'>
-              <a href='/commands/setnx.html'>
+              <a src='./commands/setnx.html'>
                 <span class='command'>
                   SETNX
                   <span class='args'>
@@ -1893,7 +1893,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='setrange'>
-              <a href='/commands/setrange.html'>
+              <a src='./commands/setrange.html'>
                 <span class='command'>
                   SETRANGE
                   <span class='args'>
@@ -1906,7 +1906,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='shutdown'>
-              <a href='/commands/shutdown.html'>
+              <a src='./commands/shutdown.html'>
                 <span class='command'>
                   SHUTDOWN
                   <span class='args'>
@@ -1918,7 +1918,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sinter'>
-              <a href='/commands/sinter.html'>
+              <a src='./commands/sinter.html'>
                 <span class='command'>
                   SINTER
                   <span class='args'>
@@ -1929,7 +1929,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sinterstore'>
-              <a href='/commands/sinterstore.html'>
+              <a src='./commands/sinterstore.html'>
                 <span class='command'>
                   SINTERSTORE
                   <span class='args'>
@@ -1941,7 +1941,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sismember'>
-              <a href='/commands/sismember.html'>
+              <a src='./commands/sismember.html'>
                 <span class='command'>
                   SISMEMBER
                   <span class='args'>
@@ -1953,7 +1953,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='slaveof'>
-              <a href='/commands/slaveof.html'>
+              <a src='./commands/slaveof.html'>
                 <span class='command'>
                   SLAVEOF
                   <span class='args'>
@@ -1965,7 +1965,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='slowlog'>
-              <a href='/commands/slowlog.html'>
+              <a src='./commands/slowlog.html'>
                 <span class='command'>
                   SLOWLOG
                   <span class='args'>
@@ -1977,7 +1977,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='smembers'>
-              <a href='/commands/smembers.html'>
+              <a src='./commands/smembers.html'>
                 <span class='command'>
                   SMEMBERS
                   <span class='args'>
@@ -1988,7 +1988,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='smove'>
-              <a href='/commands/smove.html'>
+              <a src='./commands/smove.html'>
                 <span class='command'>
                   SMOVE
                   <span class='args'>
@@ -2001,7 +2001,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='sort'>
-              <a href='/commands/sort.html'>
+              <a src='./commands/sort.html'>
                 <span class='command'>
                   SORT
                   <span class='args'>
@@ -2018,7 +2018,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='spop'>
-              <a href='/commands/spop.html'>
+              <a src='./commands/spop.html'>
                 <span class='command'>
                   SPOP
                   <span class='args'>
@@ -2030,7 +2030,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='srandmember'>
-              <a href='/commands/srandmember.html'>
+              <a src='./commands/srandmember.html'>
                 <span class='command'>
                   SRANDMEMBER
                   <span class='args'>
@@ -2042,7 +2042,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='srem'>
-              <a href='/commands/srem.html'>
+              <a src='./commands/srem.html'>
                 <span class='command'>
                   SREM
                   <span class='args'>
@@ -2054,7 +2054,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='string' data-name='strlen'>
-              <a href='/commands/strlen.html'>
+              <a src='./commands/strlen.html'>
                 <span class='command'>
                   STRLEN
                   <span class='args'>
@@ -2065,7 +2065,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='pubsub' data-name='subscribe'>
-              <a href='/commands/subscribe.html'>
+              <a src='./commands/subscribe.html'>
                 <span class='command'>
                   SUBSCRIBE
                   <span class='args'>
@@ -2076,7 +2076,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sunion'>
-              <a href='/commands/sunion.html'>
+              <a src='./commands/sunion.html'>
                 <span class='command'>
                   SUNION
                   <span class='args'>
@@ -2087,7 +2087,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sunionstore'>
-              <a href='/commands/sunionstore.html'>
+              <a src='./commands/sunionstore.html'>
                 <span class='command'>
                   SUNIONSTORE
                   <span class='args'>
@@ -2099,7 +2099,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='connection' data-name='swapdb'>
-              <a href='/commands/swapdb.html'>
+              <a src='./commands/swapdb.html'>
                 <span class='command'>
                   SWAPDB
                   <span class='args'>
@@ -2110,7 +2110,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='sync'>
-              <a href='/commands/sync.html'>
+              <a src='./commands/sync.html'>
                 <span class='command'>
                   SYNC
                   <span class='args'>
@@ -2120,7 +2120,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='server' data-name='time'>
-              <a href='/commands/time.html'>
+              <a src='./commands/time.html'>
                 <span class='command'>
                   TIME
                   <span class='args'>
@@ -2130,7 +2130,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='keys' data-name='touch'>
-              <a href='/commands/touch.html'>
+              <a src='./commands/touch.html'>
                 <span class='command'>
                   TOUCH
                   <span class='args'>
@@ -2141,7 +2141,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='ttl'>
-              <a href='/commands/ttl.html'>
+              <a src='./commands/ttl.html'>
                 <span class='command'>
                   TTL
                   <span class='args'>
@@ -2152,7 +2152,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='type'>
-              <a href='/commands/type.html'>
+              <a src='./commands/type.html'>
                 <span class='command'>
                   TYPE
                   <span class='args'>
@@ -2163,7 +2163,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='keys' data-name='unlink'>
-              <a href='/commands/unlink.html'>
+              <a src='./commands/unlink.html'>
                 <span class='command'>
                   UNLINK
                   <span class='args'>
@@ -2174,7 +2174,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='pubsub' data-name='unsubscribe'>
-              <a href='/commands/unsubscribe.html'>
+              <a src='./commands/unsubscribe.html'>
                 <span class='command'>
                   UNSUBSCRIBE
                   <span class='args'>
@@ -2185,7 +2185,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='transactions' data-name='unwatch'>
-              <a href='/commands/unwatch.html'>
+              <a src='./commands/unwatch.html'>
                 <span class='command'>
                   UNWATCH
                   <span class='args'>
@@ -2195,7 +2195,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='wait'>
-              <a href='/commands/wait.html'>
+              <a src='./commands/wait.html'>
                 <span class='command'>
                   WAIT
                   <span class='args'>
@@ -2207,7 +2207,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='transactions' data-name='watch'>
-              <a href='/commands/watch.html'>
+              <a src='./commands/watch.html'>
                 <span class='command'>
                   WATCH
                   <span class='args'>
@@ -2218,7 +2218,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xack'>
-              <a href='/commands/xack.html'>
+              <a src='./commands/xack.html'>
                 <span class='command'>
                   XACK
                   <span class='args'>
@@ -2229,7 +2229,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xadd'>
-              <a href='/commands/xadd.html'>
+              <a src='./commands/xadd.html'>
                 <span class='command'>
                   XADD
                   <span class='args'>
@@ -2240,7 +2240,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xclaim'>
-              <a href='/commands/xclaim.html'>
+              <a src='./commands/xclaim.html'>
                 <span class='command'>
                   XCLAIM
                   <span class='args'>
@@ -2251,7 +2251,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xdel'>
-              <a href='/commands/xdel.html'>
+              <a src='./commands/xdel.html'>
                 <span class='command'>
                   XDEL
                   <span class='args'>
@@ -2262,7 +2262,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xgroup'>
-              <a href='/commands/xgroup.html'>
+              <a src='./commands/xgroup.html'>
                 <span class='command'>
                   XGROUP
                   <span class='args'>
@@ -2273,7 +2273,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xinfo'>
-              <a href='/commands/xinfo.html'>
+              <a src='./commands/xinfo.html'>
                 <span class='command'>
                   XINFO
                   <span class='args'>
@@ -2284,7 +2284,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xlen'>
-              <a href='/commands/xlen.html'>
+              <a src='./commands/xlen.html'>
                 <span class='command'>
                   XLEN
                   <span class='args'>
@@ -2295,7 +2295,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xpending'>
-              <a href='/commands/xpending.html'>
+              <a src='./commands/xpending.html'>
                 <span class='command'>
                   XPENDING
                   <span class='args'>
@@ -2306,7 +2306,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xrange'>
-              <a href='/commands/xrange.html'>
+              <a src='./commands/xrange.html'>
                 <span class='command'>
                   XRANGE
                   <span class='args'>
@@ -2317,7 +2317,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xread'>
-              <a href='/commands/xread.html'>
+              <a src='./commands/xread.html'>
                 <span class='command'>
                   XREAD
                   <span class='args'>
@@ -2328,7 +2328,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xreadgroup'>
-              <a href='/commands/xreadgroup.html'>
+              <a src='./commands/xreadgroup.html'>
                 <span class='command'>
                   XREADGROUP
                   <span class='args'>
@@ -2339,7 +2339,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xrevrange'>
-              <a href='/commands/xrevrange.html'>
+              <a src='./commands/xrevrange.html'>
                 <span class='command'>
                   XREVRANGE
                   <span class='args'>
@@ -2350,7 +2350,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='streams' data-name='xtrim'>
-              <a href='/commands/xtrim.html'>
+              <a src='./commands/xtrim.html'>
                 <span class='command'>
                   XTRIM
                   <span class='args'>
@@ -2361,7 +2361,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zadd'>
-              <a href='/commands/zadd.html'>
+              <a src='./commands/zadd.html'>
                 <span class='command'>
                   ZADD
                   <span class='args'>
@@ -2376,7 +2376,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zcard'>
-              <a href='/commands/zcard.html'>
+              <a src='./commands/zcard.html'>
                 <span class='command'>
                   ZCARD
                   <span class='args'>
@@ -2387,7 +2387,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zcount'>
-              <a href='/commands/zcount.html'>
+              <a src='./commands/zcount.html'>
                 <span class='command'>
                   ZCOUNT
                   <span class='args'>
@@ -2400,7 +2400,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zincrby'>
-              <a href='/commands/zincrby.html'>
+              <a src='./commands/zincrby.html'>
                 <span class='command'>
                   ZINCRBY
                   <span class='args'>
@@ -2413,7 +2413,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zinterstore'>
-              <a href='/commands/zinterstore.html'>
+              <a src='./commands/zinterstore.html'>
                 <span class='command'>
                   ZINTERSTORE
                   <span class='args'>
@@ -2428,7 +2428,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zlexcount'>
-              <a href='/commands/zlexcount.html'>
+              <a src='./commands/zlexcount.html'>
                 <span class='command'>
                   ZLEXCOUNT
                   <span class='args'>
@@ -2441,7 +2441,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='sorted_set' data-name='zpopmax'>
-              <a href='/commands/zpopmax.html'>
+              <a src='./commands/zpopmax.html'>
                 <span class='command'>
                   ZPOPMAX
                   <span class='args'>
@@ -2452,7 +2452,7 @@ discuzTid: 850
               </a>
             </li>
 			<li data-group='sorted_set' data-name='zpopmin'>
-              <a href='/commands/zpopmin.html'>
+              <a src='./commands/zpopmin.html'>
                 <span class='command'>
                   ZPOPMIN
                   <span class='args'>
@@ -2463,7 +2463,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrange'>
-              <a href='/commands/zrange.html'>
+              <a src='./commands/zrange.html'>
                 <span class='command'>
                   ZRANGE
                   <span class='args'>
@@ -2477,7 +2477,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrangebylex'>
-              <a href='/commands/zrangebylex.html'>
+              <a src='./commands/zrangebylex.html'>
                 <span class='command'>
                   ZRANGEBYLEX
                   <span class='args'>
@@ -2491,7 +2491,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrevrangebylex'>
-              <a href='/commands/zrevrangebylex.html'>
+              <a src='./commands/zrevrangebylex.html'>
                 <span class='command'>
                   ZREVRANGEBYLEX
                   <span class='args'>
@@ -2505,7 +2505,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrangebyscore'>
-              <a href='/commands/zrangebyscore.html'>
+              <a src='./commands/zrangebyscore.html'>
                 <span class='command'>
                   ZRANGEBYSCORE
                   <span class='args'>
@@ -2520,7 +2520,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrank'>
-              <a href='/commands/zrank.html'>
+              <a src='./commands/zrank.html'>
                 <span class='command'>
                   ZRANK
                   <span class='args'>
@@ -2532,7 +2532,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrem'>
-              <a href='/commands/zrem.html'>
+              <a src='./commands/zrem.html'>
                 <span class='command'>
                   ZREM
                   <span class='args'>
@@ -2544,7 +2544,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zremrangebylex'>
-              <a href='/commands/zremrangebylex.html'>
+              <a src='./commands/zremrangebylex.html'>
                 <span class='command'>
                   ZREMRANGEBYLEX
                   <span class='args'>
@@ -2557,7 +2557,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zremrangebyrank'>
-              <a href='/commands/zremrangebyrank.html'>
+              <a src='./commands/zremrangebyrank.html'>
                 <span class='command'>
                   ZREMRANGEBYRANK
                   <span class='args'>
@@ -2570,7 +2570,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zremrangebyscore'>
-              <a href='/commands/zremrangebyscore.html'>
+              <a src='./commands/zremrangebyscore.html'>
                 <span class='command'>
                   ZREMRANGEBYSCORE
                   <span class='args'>
@@ -2583,7 +2583,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrevrange'>
-              <a href='/commands/zrevrange.html'>
+              <a src='./commands/zrevrange.html'>
                 <span class='command'>
                   ZREVRANGE
                   <span class='args'>
@@ -2597,7 +2597,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrevrangebyscore'>
-              <a href='/commands/zrevrangebyscore.html'>
+              <a src='./commands/zrevrangebyscore.html'>
                 <span class='command'>
                   ZREVRANGEBYSCORE
                   <span class='args'>
@@ -2612,7 +2612,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrevrank'>
-              <a href='/commands/zrevrank.html'>
+              <a src='./commands/zrevrank.html'>
                 <span class='command'>
                   ZREVRANK
                   <span class='args'>
@@ -2624,7 +2624,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zscore'>
-              <a href='/commands/zscore.html'>
+              <a src='./commands/zscore.html'>
                 <span class='command'>
                   ZSCORE
                   <span class='args'>
@@ -2636,7 +2636,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zunionstore'>
-              <a href='/commands/zunionstore.html'>
+              <a src='./commands/zunionstore.html'>
                 <span class='command'>
                   ZUNIONSTORE
                   <span class='args'>
@@ -2651,7 +2651,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='generic' data-name='scan'>
-              <a href='/commands/scan.html'>
+              <a src='./commands/scan.html'>
                 <span class='command'>
                   SCAN
                   <span class='args'>
@@ -2664,7 +2664,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='set' data-name='sscan'>
-              <a href='/commands/sscan.html'>
+              <a src='./commands/sscan.html'>
                 <span class='command'>
                   SSCAN
                   <span class='args'>
@@ -2678,7 +2678,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='hash' data-name='hscan'>
-              <a href='/commands/hscan.html'>
+              <a src='./commands/hscan.html'>
                 <span class='command'>
                   HSCAN
                   <span class='args'>
@@ -2692,7 +2692,7 @@ discuzTid: 850
               </a>
             </li>
             <li data-group='sorted_set' data-name='zscan'>
-              <a href='/commands/zscan.html'>
+              <a src='./commands/zscan.html'>
                 <span class='command'>
                   ZSCAN
                   <span class='args'>

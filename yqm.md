@@ -40,7 +40,7 @@ permalink: yqm.html
 	<h2 id="yqmcode" style="color:#ff0000;">&nbsp;</h2>
 </div>
 
-<script src='/js/md5.js'></script>
+<script src='./js/md5.js'></script>
 
 <script>
 	function generateCode(){
