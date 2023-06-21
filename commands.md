@@ -188,7 +188,7 @@ discuzTid: 850
                     key [key ...] timeout
                   </span>
                 </span>
-                <span class='summary'>Remove and return the member with the highest score from one or more sorted sets, or block until one is available</span>
+                <span class='summary'>从一个或多个排序集中弹出一个得分最高的成员，或阻塞，直到有一个可用</span>
               </a>
             </li>
 			<li data-group='sortedsets' data-name='bzpopmin'>
@@ -199,7 +199,7 @@ discuzTid: 850
                     key [key ...] timeout
                   </span>
                 </span>
-                <span class='summary'>Remove and return the member with the lowest score from one or more sorted sets, or block until one is available</span>
+                <span class='summary'>从一个或多个排序集中弹出一个得分最低的成员，或阻塞，直到有一个可用</span>
               </a>
             </li>
             <li data-group='server' data-name='client kill'>
@@ -244,7 +244,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Returns the client ID for the current connection</span>
+                <span class='summary'>返回当前连接的客户端 ID</span>
               </a>
             </li>
             <li data-group='server' data-name='client pause'>
@@ -263,10 +263,10 @@ discuzTid: 850
                 <span class='command'>
                   CLIENT REPLY
                   <span class='args'>
-					ON|OFF|SKIP
+					          ON|OFF|SKIP
                   </span>
                 </span>
-                <span class='summary'>Instruct the server whether to reply to commands</span>
+                <span class='summary'>设置 redis 服务器对当前客户端的响应回复状态</span>
               </a>
             </li>
             <li data-group='server' data-name='client setname'>
@@ -1275,7 +1275,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Outputs memory problems report</span>
+                <span class='summary'>输出内存问题报告</span>
               </a>
             </li>
 			<li data-group='server' data-name='memory help'>
@@ -1285,7 +1285,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Show helpful text about the different subcommands</span>
+                <span class='summary'>显示有关子命令的帮助说明</span>
               </a>
             </li>
 			<li data-group='server' data-name='memory malloc stats'>
@@ -1295,7 +1295,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Show allocator internal stats</span>
+                <span class='summary'>显示分配器内部统计信息</span>
               </a>
             </li>
 			<li data-group='server' data-name='memory purge'>
@@ -1305,7 +1305,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Ask the allocator to release memory</span>
+                <span class='summary'>要求分配器释放内存</span>
               </a>
             </li>
 			<li data-group='server' data-name='memory stats'>
@@ -1315,7 +1315,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Show memory usage details</span>
+                <span class='summary'>显示内存使用情况详细信息</span>
               </a>
             </li>
 			<li data-group='server' data-name='memory usage'>
@@ -1326,7 +1326,7 @@ discuzTid: 850
 					key [SAMPLES count]
                   </span>
                 </span>
-                <span class='summary'>Estimate the memory usage of a key</span>
+                <span class='summary'>估计 key 的内存使用量</span>
               </a>
             </li>
             <li data-group='string' data-name='mget'>
@@ -1513,7 +1513,7 @@ discuzTid: 850
                     value
                   </span>
                 </span>
-                <span class='summary'>Set the value and expiration in milliseconds of a key</span>
+                <span class='summary'>设置 key 的值和过期时间（以毫秒为单位）</span>
               </a>
             </li>
             <li data-group='pubsub' data-name='psubscribe'>
@@ -1524,7 +1524,7 @@ discuzTid: 850
                     pattern [pattern ...]
                   </span>
                 </span>
-                <span class='summary'>Listen for messages published to channels matching the given patterns</span>
+                <span class='summary'>订阅匹配的通道的消息</span>
               </a>
             </li>
             <li data-group='pubsub' data-name='pubsub'>
@@ -1536,7 +1536,7 @@ discuzTid: 850
                     [argument [argument ...]]
                   </span>
                 </span>
-                <span class='summary'>Inspect the state of the Pub/Sub subsystem</span>
+                <span class='summary'>命令用于查看订阅与发布系统状态</span>
               </a>
             </li>
             <li data-group='generic' data-name='pttl'>
@@ -1600,7 +1600,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Enables read queries for a connection to a cluster slave node</span>
+                <span class='summary'>启用与 Redis 集群副本节点的连接的只读。</span>
               </a>
             </li>
             <li data-group='cluster' data-name='readwrite'>
@@ -1610,7 +1610,7 @@ discuzTid: 850
                   <span class='args'>
                   </span>
                 </span>
-                <span class='summary'>Disables read queries for a connection to a cluster slave node</span>
+                <span class='summary'>关闭与 Redis 集群副本节点的连接的只读。</span>
               </a>
             </li>
             <li data-group='generic' data-name='rename'>
@@ -1637,7 +1637,7 @@ discuzTid: 850
                 <span class='summary'>重命名一个key,新的key必须是不存在的key</span>
               </a>
             </li>
-			<li data-group='server' data-name='replicaof'>
+			      <li data-group='server' data-name='replicaof'>
               <a src='./commands/replicaof.html'>
                 <span class='command'>
                   REPLICAOF
@@ -1645,7 +1645,7 @@ discuzTid: 850
                     host port
                   </span>
                 </span>
-                <span class='summary'>Make the server a replica of another instance, or promote it as master.</span>
+                <span class='summary'>使服务器成为另一个实例的副本，或将其提升为主实例。</span>
               </a>
             </li>
             <li data-group='generic' data-name='restore'>
@@ -1760,7 +1760,7 @@ discuzTid: 850
                     YES|SYNC|NO
                   </span>
                 </span>
-                <span class='summary'>Set the debug mode for executed scripts.</span>
+                <span class='summary'>设置脚本的调试模式。</span>
               </a>
             </li>
             <li data-group='scripting' data-name='script exists'>
@@ -1771,7 +1771,7 @@ discuzTid: 850
                     script [script ...]
                   </span>
                 </span>
-                <span class='summary'>Check existence of scripts in the script cache.</span>
+                <span class='summary'>检查脚本缓存中是否存在脚本。</span>
               </a>
             </li>
             <li data-group='scripting' data-name='script flush'>
@@ -2106,7 +2106,7 @@ discuzTid: 850
                     index index
                   </span>
                 </span>
-                <span class='summary'>Swaps two Redis databases</span>
+                <span class='summary'>交换两个 Redis 数据库</span>
               </a>
             </li>
             <li data-group='server' data-name='sync'>
@@ -2129,12 +2129,12 @@ discuzTid: 850
                 <span class='summary'>返回当前服务器时间</span>
               </a>
             </li>
-			<li data-group='keys' data-name='touch'>
+			      <li data-group='keys' data-name='touch'>
               <a src='./commands/touch.html'>
                 <span class='command'>
                   TOUCH
                   <span class='args'>
-					key [key ...]
+					          key [key ...]
                   </span>
                 </span>
                 <span class='summary'>Alters the last access time of a key(s). Returns the number of existing keys specified.</span>
@@ -2170,7 +2170,7 @@ discuzTid: 850
                     key [key ...]
                   </span>
                 </span>
-                <span class='summary'>Delete a key asynchronously in another thread. Otherwise it is just as DEL, but non blocking.</span>
+                <span class='summary'>在另一个线程里异步删除 key。它就像 DEL 一样，但非阻塞。</span>
               </a>
             </li>
             <li data-group='pubsub' data-name='unsubscribe'>
@@ -2203,7 +2203,7 @@ discuzTid: 850
                     timeout
                   </span>
                 </span>
-                <span class='summary'>Wait for the synchronous replication of all the write commands sent in the context of the current connection</span>
+                <span class='summary'>等待在当前连接的上下文中发送的所有写入命令的同步复制</span>
               </a>
             </li>
             <li data-group='transactions' data-name='watch'>
@@ -2225,7 +2225,7 @@ discuzTid: 850
                     key group ID [ID ...]
                   </span>
                 </span>
-                <span class='summary'>Marks a pending message as correctly processed, effectively removing it from the pending entries list of the consumer group. Return value of the command is the number of messages successfully acknowledged, that is, the IDs we were actually able to resolve in the PEL.</span>
+                <span class='summary'>将挂起的邮件标记为已正确处理，从而有效地将其从使用者组的挂起条目列表中删除。命令的返回值是成功确认的消息数，即我们实际能够在 PEL 中解析的 ID。</span>
               </a>
             </li>
 			<li data-group='streams' data-name='xadd'>
@@ -2236,7 +2236,7 @@ discuzTid: 850
                     key ID field string [field string ...]
                   </span>
                 </span>
-                <span class='summary'>Appends a new entry to a stream</span>
+                <span class='summary'>将新条目追加到流</span>
               </a>
             </li>
 			<li data-group='streams' data-name='xclaim'>
@@ -2247,7 +2247,7 @@ discuzTid: 850
                     key group consumer min-idle-time ID [ID ...] [IDLE ms] [TIME ms-unix-time] [RETRYCOUNT count] [FORCE] [JUSTID]
                   </span>
                 </span>
-                <span class='summary'>Changes (or acquires) ownership of a message in a consumer group, as if the message was delivered to the specified consumer.</span>
+                <span class='summary'>更改（或获取）使用者组中消息的所有权，就像将消息传递给指定的使用者一样。</span>
               </a>
             </li>
 			<li data-group='streams' data-name='xdel'>
@@ -2448,7 +2448,7 @@ discuzTid: 850
                     key [count]
                   </span>
                 </span>
-                <span class='summary'>Remove and return members with the highest scores in a sorted set</span>
+                <span class='summary'>弹出 sorted set 中得分最高的成员</span>
               </a>
             </li>
 			<li data-group='sorted_set' data-name='zpopmin'>
@@ -2459,7 +2459,7 @@ discuzTid: 850
                     key [count]
                   </span>
                 </span>
-                <span class='summary'>Remove and return members with the lowest scores in a sorted set</span>
+                <span class='summary'>弹出 sorted set 中得分最低的成员</span>
               </a>
             </li>
             <li data-group='sorted_set' data-name='zrange'>
