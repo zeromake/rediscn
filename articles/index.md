@@ -10,4 +10,4 @@ discuzTid:
 
 ## 2018年11月热门文章 ##
 
-* [模板文章](/articles/temp.html)
+* [模板文章](/rediscn/articles/temp.html)
